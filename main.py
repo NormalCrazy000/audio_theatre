@@ -4,24 +4,27 @@ from gtts import gTTS
 
 
 # File ( le frasi devono essere separate da &)
-inputFileName = 'frasi.txt'
+inputFileName = 'input.txt'
 tempDirectory = "temp"
 audioDirectory="audio"
 format = "mp3"
 silentTimeMs = 10000
 language = "it"
+rowSep = "&"
 combinationAudioFilePath = os.path.join(audioDirectory, f"combinationAudio.{format}")
 
 print("Inizio generazione cartelle necessarie")
-if not os.path.exists(directory):
-    os.makedirs(directory)
+if not os.path.exists(audioDirectory):
+    os.makedirs(audioDirectory)
+if not os.path.exists(tempDirectory):
+    os.makedirs(tempDirectory)
 print("Fine generazione cartelle necessarie")
 
 
 print("Inizio lettura delle frasi")
 with open(inputFileName, 'r',encoding="utf-8") as file:
     rows = file.read()
-rows = rows.split("&")
+rows = rows.split(rowSep)
 print("Fine lettura delle frasi")
 
 
