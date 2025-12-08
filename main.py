@@ -12,6 +12,12 @@ silentTimeMs = 10000
 language = "it"
 combinationAudioFilePath = os.path.join(audioDirectory, f"combinationAudio.{format}")
 
+print("Inizio generazione cartelle necessarie")
+if not os.path.exists(directory):
+    os.makedirs(directory)
+print("Fine generazione cartelle necessarie")
+
+
 print("Inizio lettura delle frasi")
 with open(inputFileName, 'r',encoding="utf-8") as file:
     rows = file.read()
