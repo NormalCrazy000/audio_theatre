@@ -66,8 +66,9 @@ for inputFileName in inputFileNameList:
         audioRowFilePath = os.path.join(tempDirectory, audioRowFileName)
         audioRow = AudioSegment.from_mp3(audioRowFilePath)
         combinationAudio += audioRow
-        silent = AudioSegment.silent(silentTimeMs)
-        combinationAudio += silent
+        if(splitFile == True):
+            silent = AudioSegment.silent(silentTimeMs)
+            combinationAudio += silent
         
     combinationAudioFilePath = os.path.join(audioDirectory, f"{inputFileName}.{format}")
     combinationAudio.export(combinationAudioFilePath, format=format)
