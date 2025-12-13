@@ -54,7 +54,7 @@ for inputFileName in inputFileNameList:
         if(row != ''):
             tts = gTTS(text=row, lang=language)
             tts.save(audioRowFilePath)
-    print("Fine gnerazione audio delle frasi")
+    print("Fine generazione audio delle frasi")
 
 
     # combinazione audio
