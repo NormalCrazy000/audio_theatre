@@ -4,5 +4,6 @@ apt-get install ffmpeg libavcodec-extra
 
 
 Per runnarlo:
-crea il file e mettilo dentro input con le frasi separate da & se vuoi che lo siano(dei settare il parametro a True nel codice TODO)
-un run main.py
+1)crea il file e mettilo dentro input, l'utput sarà dentro la cartella audio
+2)un run main.py -> per runnare con i valori di default
+3)uv run main.py --help -> per sapere che parametri si possono modificare
