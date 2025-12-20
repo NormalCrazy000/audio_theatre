@@ -1,9 +1,7 @@
-import os
 import click
 import lib
 
 
-# Variabili
 @click.command()
 @click.option(
     "--split",
@@ -48,7 +46,7 @@ def test_to_audio(split, out_audio, silent_time_ms, language, row_sep):
     print(f"language = {language}")
     print(f"row_sep = {row_sep}")
     # TODO
-    input("Premi INVIO per iniziare a leggere i file...")
+    input("Premi INVIO per iniziare")
     lib.test_to_audio(split, out_audio, silent_time_ms, language, row_sep)
 
 

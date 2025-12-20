@@ -2,7 +2,6 @@ import os
 from pydub import AudioSegment
 from gtts import gTTS
 
-# Fisse
 tempDirectory = "temp"
 audioDirectory = "audio"
 inputDirectory = "input"
