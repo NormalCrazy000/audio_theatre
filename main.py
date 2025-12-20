@@ -48,7 +48,7 @@ format = "mp3"
     type=str,
     help="Carattere da usare per splittare il file in più frasi",
 )
-def hello(split, out_audio, silent_time_ms, language, row_sep):
+def test_to_audio(split, out_audio, silent_time_ms, language, row_sep):
     print("Valori delle variabili:")
     print(f"split = {split}")
     print(f"out_audio = {out_audio}")
@@ -124,4 +124,4 @@ def hello(split, out_audio, silent_time_ms, language, row_sep):
 
 
 if __name__ == "__main__":
-    hello()
+    test_to_audio()
