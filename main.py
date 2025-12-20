@@ -1,5 +1,5 @@
 import click
-import lib
+from lib import TestToAudio
 
 
 @click.command()
@@ -47,8 +47,7 @@ def test_to_audio(split, out_audio, silent_time_ms, language, row_sep):
     print(f"row_sep = {row_sep}")
     # TODO
     input("Premi INVIO per iniziare")
-    lib.test_to_audio(split, out_audio, silent_time_ms, language, row_sep)
-
+    TestToAudio.test_to_audio(split, out_audio, silent_time_ms, language, row_sep)
 
 if __name__ == "__main__":
     test_to_audio()
