@@ -45,6 +45,12 @@ def test_to_audio_cli(
     language: str,
     row_separator: str,
 ):
+    """
+    CLI per convertire file di testo in audio (TTS).
+
+    Questa funzione viene invocata da riga di comando e passa i parametri
+    alla classe TestToAudio che gestisce la logica di conversione.
+    """
     print("Valori delle variabili:")
     print(f"split = {split}")
     print(f"out_audio_format = {out_audio_format}")
@@ -52,6 +58,7 @@ def test_to_audio_cli(
     print(f"language = {language}")
     print(f"row_separator = {row_separator}")
 
+    # Pausa per permettere all'utente di leggere i parametri prima dell'avvio
     input("Premi INVIO per iniziare")
 
     TestToAudio.test_to_audio(
