@@ -35,19 +35,21 @@ Questo script permette di convertire uno o più file di testo posizionati nella 
 
 2.  **Esegui lo script**:
     
+    Il comando supporta diversi sottocomandi. Al momento è disponibile `convert`.
+
     Esempio base (con `uv`):
     ```bash
-    uv run main.py
+    uv run main.py convert
     ```
 
     Oppure direttamente con Python (se l'ambiente è attivo):
     ```bash
-    python main.py
+    python main.py convert
     ```
 
 3.  **Output**: Troverai i file audio generati nella cartella `audio`.
 
-### Opzioni da riga di comando
+### Opzioni da riga di comando (per il comando convert)
 
 Puoi personalizzare l'esecuzione usando i seguenti argomenti (flag):
 
@@ -64,7 +66,7 @@ Puoi personalizzare l'esecuzione usando i seguenti argomenti (flag):
 Convertire un testo in inglese, splittando le frasi dove trova il carattere `|` e inserendo solo 2 secondi di pausa:
 
 ```bash
-uv run main.py --language="en" --split=True --row-separator="|" --silent-time-ms=2000
+uv run main.py convert --language="en" --split=True --row-separator="|" --silent-time-ms=2000
 ```
 
 ## Struttura del Progetto

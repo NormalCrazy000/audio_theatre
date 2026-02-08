@@ -2,7 +2,16 @@ import click
 from lib import TestToAudio
 
 
-@click.command()
+@click.group()
+def cli():
+    """
+    Interfaccia CLI principale per il progetto Test To Audio.
+    Usa i sottocomandi per eseguire le varie funzionalità disponibili.
+    """
+    pass
+
+
+@cli.command(name="convert")
 @click.option(
     "--split",
     default=False,
@@ -38,7 +47,7 @@ from lib import TestToAudio
     type=str,
     help="Carattere da usare per splittare il file in più frasi",
 )
-def test_to_audio_cli(
+def convert_text_to_audio(
     split: bool,
     out_audio_format: str,
     silent_time_ms: int,
@@ -46,10 +55,7 @@ def test_to_audio_cli(
     row_separator: str,
 ):
     """
-    CLI per convertire file di testo in audio (TTS).
-
-    Questa funzione viene invocata da riga di comando e passa i parametri
-    alla classe TestToAudio che gestisce la logica di conversione.
+    Converte i file di testo nella cartella input in file audio.
     """
     print("Valori delle variabili:")
     print(f"split = {split}")
@@ -67,4 +73,4 @@ def test_to_audio_cli(
 
 
 if __name__ == "__main__":
-    test_to_audio_cli()
+    cli()
