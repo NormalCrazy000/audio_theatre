@@ -108,9 +108,9 @@ class TestToAudio:
 
         print("Inizio generazione audio delle frasi")
         # Itera su ogni segmento di testo e genera l'audio
-        for i, row in enumerate(rows, start=1):
-            # Usa 'i' per ordinare i file temporanei (es. 1.mp3, 2.mp3...)
-            audio_file_path = os.path.join(TEMP_DIRECTORY, f"{i}.{AUDIO_FORMAT}")
+        for i, row in enumerate(rows, start=1):     
+            # Usa 'i' per ordinare i file temporanei (es. 00001.mp3, 00002.mp3...)
+            audio_file_path = os.path.join(TEMP_DIRECTORY, f"{i:05d}.{AUDIO_FORMAT}")
             if row.strip() != "":
                 tts = gTTS(text=row, lang=language)
                 tts.save(audio_file_path)
@@ -134,6 +134,7 @@ class TestToAudio:
         :param row_separator: Separatore testo.
         """
         TestToAudio.__create_utility_directory()
+        TestToAudio.__clear_temp_files()
         input_files = os.listdir(INPUT_DIRECTORY)
 
         # Processa ogni file presente nella cartella input
