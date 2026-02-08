@@ -1,5 +1,5 @@
 import click
-from lib import TestToAudio
+from text_to_audio import TestToAudio
 import pdf_to_text
 
 
