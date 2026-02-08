@@ -35,21 +35,25 @@ Questo script permette di convertire uno o più file di testo posizionati nella 
 
 2.  **Esegui lo script**:
     
-    Il comando supporta diversi sottocomandi. Al momento è disponibile `convert`.
+    Il comando supporta diversi sottocomandi:
+    *   `test_to_audio`: Converte file di testo in audio.
+    *   `pdf_to_text`: Estrae testo da file PDF.
 
-    Esempio base (con `uv`):
+    Esempio conversione testo -> audio (con `uv`):
     ```bash
-    uv run main.py convert
+    uv run main.py test_to_audio
     ```
 
-    Oppure direttamente con Python (se l'ambiente è attivo):
+    Esempio conversione PDF -> testo:
     ```bash
-    python main.py convert
+    uv run main.py pdf_to_text
     ```
 
-3.  **Output**: Troverai i file audio generati nella cartella `audio`.
+3.  **Output**:
+    *   I file audio generati saranno nella cartella `audio`.
+    *   I file di testo estratti dai PDF saranno nella cartella `input` (con estensione `.txt`).
 
-### Opzioni da riga di comando (per il comando convert)
+### Opzioni da riga di comando (per il comando test_to_audio)
 
 Puoi personalizzare l'esecuzione usando i seguenti argomenti (flag):
 
@@ -61,12 +65,12 @@ Puoi personalizzare l'esecuzione usando i seguenti argomenti (flag):
 | `--language` | `str` | `it` | Codice della lingua per la sintesi vocale (es. `en`, `it`). |
 | `--row-separator` | `str` | `&` | Carattere usato per separare le frasi nel testo se `--split` è attivo. |
 
-### Esempio Avanzato
+### Esempio Avanzato (test_to_audio)
 
 Convertire un testo in inglese, splittando le frasi dove trova il carattere `|` e inserendo solo 2 secondi di pausa:
 
 ```bash
-uv run main.py convert --language="en" --split=True --row-separator="|" --silent-time-ms=2000
+uv run main.py test_to_audio --language="en" --split=True --row-separator="|" --silent-time-ms=2000
 ```
 
 ## Struttura del Progetto
