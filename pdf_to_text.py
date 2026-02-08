@@ -1,12 +1,12 @@
 import os
 from pypdf import PdfReader
 
-INPUT_DIRECTORY = "input"
+INPUT_DIRECTORY = "pdf_folder"
 
 def convert():
     """
     Funzione principale per la conversione da PDF a testo.
-    Legge tutti i file .pdf nella cartella 'input' e li converte in .txt
+    Legge tutti i file .pdf nella cartella 'pdf_folder' e li converte in .txt
     nella stessa cartella.
     """
     print("Inizio conversione da PDF a testo...")
