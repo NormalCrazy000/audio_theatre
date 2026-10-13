@@ -1,82 +1,72 @@
-# Test To Audio
+# Text To Audio – allenamento sul copione
 
-Applicazione Python per leggere file di testo e trasformarli in file audio utilizzando la sintesi vocale (TTS).
+Applicazione Python per **studiare un copione**: trasforma il testo in un file audio in cui le battute vengono lette dalla sintesi vocale (TTS) e, dove tocca a te, c'è una pausa di silenzio in cui recitare la tua battuta a memoria.
 
-## Descrizione
-
-Questo script permette di convertire uno o più file di testo posizionati nella cartella `input` in file audio (default MP3).  
-È possibile decidere se convertire l'intero testo in un unico blocco oppure "splittarlo" in base a un separatore specificato, inserendo del silenzio tra le parti.
+> **Il progetto è in fase di refactor.** È in arrivo un'interfaccia web (niente più riga di comando) con un formato standard del copione, la scelta del personaggio da studiare, dei personaggi da ascoltare, delle pause, dell'oscuramento della propria battuta e del numero di battute precedenti da ascoltare. Il piano completo è in [`REFACTOR.md`](REFACTOR.md).
+>
+> Questo README descrive **la versione attuale (CLI)**.
 
 ## Prerequisiti
 
-*   **Python**: Versione 3.14 o superiore (come indicato nel `pyproject.toml`).
-*   **Gestore Pacchetti**: Si consiglia l'uso di `uv` (o `poetry`/`pip`).
-*   **FFmpeg**: Necessario per la manipolazione audio tramite `pydub`.
-    *   Su Ubuntu/Debian: `sudo apt install ffmpeg`
-    *   Su macOS: `brew install ffmpeg`
-    *   Su Windows: Scaricare ed aggiungere al PATH.
+- **Python** 3.14 o superiore
+- **uv** come gestore pacchetti (consigliato)
+- **FFmpeg**, necessario a `pydub`:
+  - Ubuntu/Debian: `sudo apt install ffmpeg`
+  - macOS: `brew install ffmpeg`
+  - Windows: scaricalo e aggiungilo al PATH
+- **Connessione internet**: la sintesi vocale usa gTTS (Google)
 
 ## Installazione
 
-1.  Clona il repository.
-2.  Installa le dipendenze. Se usi `uv`:
-    ```bash
-    uv sync
-    ```
-    Altrimenti con `pip`:
-    ```bash
-    pip install -r requirements.txt
-    ```
-    *(Nota: se non hai un requirements.txt, le dipendenze principali sono `click`, `gtts`, `pydub`, `audioop-lts`).*
+```bash
+uv sync
+```
 
 ## Come si usa
 
-1.  **Prepara i file**: Inserisci i file di testo (`.txt`) che vuoi convertire nella cartella `input`. Se la cartella non esiste, verrà creata al primo avvio.
+### 1. (Opzionale) Da PDF a testo
 
-2.  **Esegui lo script**:
-    
-    Il comando supporta diversi sottocomandi:
-    *   `test_to_audio`: Converte file di testo in audio.
-    *   `pdf_to_text`: Estrae testo da file PDF.
+Metti i PDF in `pdf_folder/` ed esegui:
 
-    Esempio conversione testo -> audio (con `uv`):
-    ```bash
-    uv run main.py test_to_audio
-    ```
+```bash
+uv run main.py pdf_to_text
+```
 
-    Esempio conversione PDF -> testo:
-    ```bash
-    uv run main.py pdf_to_text
-    ```
+I file `.txt` vengono creati **nella stessa cartella `pdf_folder/`**. Spostali in `input/` per il passo successivo.
 
-3.  **Output**:
-    *   I file audio generati saranno nella cartella `audio`.
-    *   I file di testo estratti dai PDF saranno nella cartella `input` (con estensione `.txt`).
+### 2. Prepara il testo
 
-### Opzioni da riga di comando (per il comando test_to_audio)
+Nel file di testo inserisci il separatore `&` nei punti in cui vuoi una pausa, cioè dove tocca a te parlare. Metti i file in `input/`; la cartella viene creata al primo avvio.
 
-Puoi personalizzare l'esecuzione usando i seguenti argomenti (flag):
+### 3. Genera l'audio
+
+```bash
+uv run main.py test_to_audio --split=True
+```
+
+Lo script mostra i parametri e aspetta che premi INVIO. Gli audio vengono salvati in `audio/`.
+
+### Opzioni di `test_to_audio`
 
 | Opzione | Tipo | Default | Descrizione |
 | :--- | :--- | :--- | :--- |
-| `--split` | `bool` | `False` | Se `true`, divide il testo in base al separatore. |
-| `--out-audio-format` | `str` | `mp3` | Formato del file audio in uscita (es. `wav`, `mp3`). |
-| `--silent-time-ms` | `int` | `10000` | Millisecondi di silenzio da aggiungere tra le parti (se split è attivo). Default 10 secondi. |
-| `--language` | `str` | `it` | Codice della lingua per la sintesi vocale (es. `en`, `it`). |
-| `--row-separator` | `str` | `&` | Carattere usato per separare le frasi nel testo se `--split` è attivo. |
+| `--split` | `bool` | `False` | Divide il testo sul separatore e inserisce le pause. |
+| `--out-audio-format` | `str` | `mp3` | Formato di uscita (`mp3`, `wav`, …). |
+| `--silent-time-ms` | `int` | `10000` | Durata di ogni pausa in millisecondi. |
+| `--language` | `str` | `it` | Lingua della sintesi vocale (`it`, `en`, …). |
+| `--row-separator` | `str` | `&` | Carattere che separa le parti. |
 
-### Esempio Avanzato (test_to_audio)
-
-Convertire un testo in inglese, splittando le frasi dove trova il carattere `|` e inserendo solo 2 secondi di pausa:
+Esempio: testo in inglese, separatore `|`, pause di 2 secondi.
 
 ```bash
 uv run main.py test_to_audio --language="en" --split=True --row-separator="|" --silent-time-ms=2000
 ```
 
-## Struttura del Progetto
+## Struttura
 
-*   `input/`: Cartella dove inserire i file di testo da leggere.
-*   `audio/`: Cartella dove verranno salvati i file audio generati.
-*   `temp/`: Cartella temporanea utilizzata durante l'elaborazione (viene pulita automaticamente).
-*   `main.py`: Punto di ingresso dello script (CLI).
-*   `lib.py`: Contiene la logica di conversione audio.
+- `main.py`: CLI (`click`)
+- `text_to_audio.py`: generazione e unione degli audio
+- `pdf_to_text.py`: estrazione del testo dai PDF
+- `input/`, `pdf_folder/`, `audio/`, `temp/`: cartelle di lavoro (ignorate da git)
+- `REFACTOR.md`: piano della nuova versione
+- `CLAUDE.md`: note per chi sviluppa
