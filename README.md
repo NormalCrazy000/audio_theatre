@@ -76,6 +76,23 @@ uv run --project backend copione-audio voci --lingua it
 
 Le battute sintetizzate vengono salvate in `~/.cache/copione-audio/`: rigenerare con opzioni diverse è molto più veloce.
 
+### Server (API)
+
+```bash
+uv run --project backend copione-audio server
+```
+
+Avvia l'API su <http://127.0.0.1:8000>. La documentazione interattiva è su <http://127.0.0.1:8000/docs>. L'interfaccia web (in arrivo) userà questa API.
+
+| Endpoint | Descrizione |
+| :--- | :--- |
+| `POST /api/copioni/analizza` | `{"testo": …}`: personaggi, scene, battute ed errori |
+| `POST /api/copioni/pdf` | Upload di un PDF: testo grezzo |
+| `GET /api/voci?lingua=it` | Voci disponibili |
+| `POST /api/audio` | `{"testo", "opzioni", "voci"}`: avvia la generazione e restituisce un `id` |
+| `GET /api/audio/{id}` | Stato e progresso |
+| `GET /api/audio/{id}/mp3` | Scarica l'mp3 |
+
 ### Da PDF a testo grezzo
 
 ```bash
@@ -97,6 +114,7 @@ I test non usano la rete: il TTS viene sostituito da un finto sintetizzatore.
 
 - `backend/src/copione_audio/`: pacchetto Python
   - `cli.py`: CLI (`click`)
+  - `api/`: API FastAPI
   - `copione/`: modello, parser e validator del formato standard del copione
   - `piano.py`: dal copione e dalle opzioni calcola la sequenza di segmenti (funzione pura)
   - `render.py`: dai segmenti produce l'audio

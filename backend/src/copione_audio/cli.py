@@ -4,7 +4,6 @@ CLI sottile sopra il core. Le cartelle predefinite (`pdf_folder/`, `input/`,
 """
 
 import asyncio
-from collections import Counter
 from pathlib import Path
 
 import click
@@ -121,10 +120,8 @@ def valida_copione(file: Path):
 
     click.echo(f"Titolo: {copione.titolo}  Lingua: {copione.lingua}")
     click.echo(f"Scene: {len(copione.scene)}  Battute: {len(copione.battute)}")
-    # Una battuta detta insieme conta per ognuno dei personaggi.
-    conteggio = Counter(n for b in copione.battute for n in b.personaggi)
-    for nome in copione.personaggi:
-        click.echo(f"  {nome}: {conteggio[nome]}")
+    for nome, numero in copione.battute_per_personaggio().items():
+        click.echo(f"  {nome}: {numero}")
 
     if errori:
         click.echo(f"\n{len(errori)} errori:", err=True)
@@ -232,7 +229,7 @@ def genera(
         nome = file.name.removesuffix(".txt").removesuffix(".copione")
         output = Path("audio") / f"{nome}.{personaggio}.mp3"
     output.parent.mkdir(parents=True, exist_ok=True)
-    audio.export(output, format="mp3")
+    audio.export(output, format="mp3").close()
     click.echo(f"Audio salvato in '{output}' ({len(audio) / 60000:.1f} minuti).")
 
 
@@ -244,3 +241,16 @@ def elenca_voci(lingua: str):
     """
     for voce in asyncio.run(crea_motore().voci(lingua)):
         click.echo(f"{voce.nome}  ({voce.genere}, {voce.lingua})")
+
+
+@cli.command(name="server")
+@click.option("--host", default="127.0.0.1", show_default=True, help="Indirizzo su cui ascoltare.")
+@click.option("--port", default=8000, show_default=True, help="Porta.")
+@click.option("--reload", is_flag=True, help="Riavvia a ogni modifica del codice (sviluppo).")
+def server(host: str, port: int, reload: bool):
+    """
+    Avvia l'API (e il frontend, se è stato compilato).
+    """
+    import uvicorn
+
+    uvicorn.run("copione_audio.api.main:app", host=host, port=port, reload=reload)

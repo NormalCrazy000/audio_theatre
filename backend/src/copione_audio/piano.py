@@ -81,6 +81,17 @@ class Opzioni:
     scene: frozenset[int] | None = None
     leggi_didascalie: bool = False
 
+    def __post_init__(self):
+        """:raises ValueError: Se un valore non ha senso."""
+        if self.moltiplicatore <= 0:
+            raise ValueError("il moltiplicatore deve essere maggiore di zero")
+        if min(self.pausa_min_s, self.stacco_s, self.respiro_s) < 0:
+            raise ValueError("le durate non possono essere negative")
+        if self.pausa_min_s > self.pausa_max_s:
+            raise ValueError("la pausa minima supera la massima")
+        if self.contesto is not None and self.contesto < 0:
+            raise ValueError("il contesto non può essere negativo")
+
 
 def testo_parlato(testo: str, leggi_didascalie: bool) -> str:
     """

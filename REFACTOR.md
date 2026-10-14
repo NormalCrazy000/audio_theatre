@@ -25,7 +25,7 @@ L'ordine segue le dipendenze: prima il formato dei dati, poi la logica (testabil
 2. **Fase 1 – Formato standard e parser** (punto 2) ✅
 3. **Fase 2 – Conversione con skill Claude** (punto 2) ✅
 4. **Fase 3 – Motore di generazione**: personaggio da studiare (5), personaggi inclusi (2), oscuramento (4), pause (3), contesto (6) ✅
-5. **Fase 4 – API FastAPI**
+5. **Fase 4 – API FastAPI** ✅
 6. **Fase 5 – Frontend Svelte** (punto 1)
 7. **Fase 6 – Opzionale**: eseguibile ovunque (punto 1), modello locale, TTS offline
 
@@ -141,7 +141,16 @@ Opzioni:
 | `leggi_didascalie` | – | Di default no. |
 | `voci` | – | Associazione personaggio → voce edge-tts, assegnata in automatico e modificabile. |
 
-### Fase 4 – API FastAPI
+### Fase 4 – API FastAPI ✅
+
+> Completata (`backend/src/copione_audio/api/main.py`, avvio con `copione-audio server`; documentazione interattiva su `/docs`). Rispetto al piano:
+>
+> - tutti gli endpoint stanno sotto **`/api`** (es. `POST /api/copioni/analizza`), così non si scontrano con il frontend servito su `/`;
+> - `analizza` e `audio` ricevono il copione come JSON `{"testo": …}`: il frontend legge il file nel browser;
+> - `analizza` restituisce anche, per ogni scena, chi parla;
+> - l'audio è un **job asincrono**: `POST /api/audio` (202, con `id`; errori di copione e opzioni subito come 422) → `GET /api/audio/{id}` (stato, `fatte`/`totali`) → `GET /api/audio/{id}/mp3`;
+> - le opzioni sono il dataclass `Opzioni` del piano (stessi nomi e default, `contesto: null` = tutto, `scene` con indici da 0); `voci` è facoltativo e i personaggi mancanti ricevono una voce automatica;
+> - i lavori stanno in memoria e gli mp3 in una cartella temporanea: si perdono al riavvio (va bene per l'uso in locale).
 
 - `POST /copioni/analizza`: riceve un `.copione.txt` e restituisce i personaggi, le scene, il numero di battute e gli errori di validazione.
 - `POST /copioni/pdf`: riceve un PDF e restituisce il testo grezzo. Più avanti, con il modello locale, restituirà direttamente il copione convertito.
@@ -150,6 +159,8 @@ Opzioni:
 - In produzione FastAPI serve anche la build statica di Svelte, così c'è un solo processo.
 
 ### Fase 5 – Frontend Svelte
+
+Decisione: le **voci si scelgono qui**, non nell'intestazione del copione. L'assegnazione automatica non conosce il genere dei personaggi, quindi la UI deve rendere facile correggerla.
 
 Flusso in una sola pagina:
 

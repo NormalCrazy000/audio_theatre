@@ -143,3 +143,17 @@ def test_respiro_dopo_ogni_lettura():
 def test_personaggio_sconosciuto():
     with pytest.raises(ValueError, match="'Z'"):
         piano(personaggio="Z")
+
+
+@pytest.mark.parametrize(
+    "modifiche",
+    [
+        {"moltiplicatore": 0},
+        {"pausa_min_s": -1},
+        {"pausa_min_s": 10, "pausa_max_s": 5},
+        {"contesto": -1},
+    ],
+)
+def test_opzioni_non_valide(modifiche):
+    with pytest.raises(ValueError):
+        replace(BASE, **modifiche)

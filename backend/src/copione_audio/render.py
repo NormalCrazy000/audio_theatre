@@ -40,7 +40,10 @@ async def _sintetizza_tutte(
         completate += 1
         if progresso:
             progresso(completate, len(letture))
-        return AudioSegment.from_file(BytesIO(dati), format=motore.formato)
+        # La decodifica chiama ffmpeg: in un thread per non bloccare il loop.
+        return await asyncio.to_thread(
+            AudioSegment.from_file, BytesIO(dati), format=motore.formato
+        )
 
     audio = await asyncio.gather(*(una(p, t) for p, t in letture))
     return dict(zip(letture, audio))

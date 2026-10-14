@@ -1,5 +1,6 @@
 """Modello dati del copione nel formato standard (vedi docs/formato-copione.md)."""
 
+from collections import Counter
 from dataclasses import dataclass, field
 
 
@@ -59,6 +60,14 @@ class Copione:
     @property
     def battute(self) -> list[Battuta]:
         return [b for scena in self.scene for b in scena.battute]
+
+    def battute_per_personaggio(self) -> dict[str, int]:
+        """
+        Quante battute ha ogni personaggio dichiarato. Una battuta detta
+        insieme conta per ognuno.
+        """
+        conteggio = Counter(n for b in self.battute for n in b.personaggi)
+        return {nome: conteggio[nome] for nome in self.personaggi}
 
 
 @dataclass(frozen=True)
