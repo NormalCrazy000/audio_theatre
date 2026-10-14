@@ -23,7 +23,7 @@ L'ordine segue le dipendenze: prima il formato dei dati, poi la logica (testabil
 
 1. **Fase 0 – Pulizia e ristrutturazione** ✅
 2. **Fase 1 – Formato standard e parser** (punto 2) ✅
-3. **Fase 2 – Conversione con skill Claude** (punto 2)
+3. **Fase 2 – Conversione con skill Claude** (punto 2) ✅
 4. **Fase 3 – Motore di generazione**: personaggio da studiare (5), personaggi inclusi (2), oscuramento (4), pause (3), contesto (6)
 5. **Fase 4 – API FastAPI**
 6. **Fase 5 – Frontend Svelte** (punto 1)
@@ -98,7 +98,9 @@ Regole:
 
 Da fare: un parser con test, e la specifica copiata in `docs/formato-copione.md`, così diventa il riferimento sia per la skill sia per il modello locale.
 
-### Fase 2 – Conversione PDF/testo → formato standard
+### Fase 2 – Conversione PDF/testo → formato standard ✅
+
+> Completata. Le regole di conversione stanno in `backend/src/copione_audio/conversione/istruzioni.md` (fonte unica per la skill e per il futuro `OllamaConverter`); la skill aggiunge solo il procedimento. `copione-audio valida FILE` stampa errori e battute per personaggio. Collaudo su *Così non vale* (PDF di 48 pagine): 19 scene, 1109 battute, nessun errore; i conteggi per scena coincidono con il testo grezzo. Per copioni lunghi e regolari la skill scrive uno script usa e getta e corregge a mano il resto.
 
 - `conversione/pdf.py`: estrazione del testo grezzo dal PDF (riusa l'attuale `pdf_to_text.py`).
 - **Skill Claude** `.claude/skills/converti-copione/`: riceve PDF o testo grezzo e produce un `.copione.txt` valido. Deve:

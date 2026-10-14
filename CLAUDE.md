@@ -10,12 +10,13 @@ Strumento per **studiare un copione**: genera un audio in cui il TTS legge le ba
 
 Il progetto è **in refactor**. Il piano, le decisioni prese e l'ordine delle fasi sono in [`REFACTOR.md`](REFACTOR.md). Va letto prima di qualsiasi modifica strutturale e aggiornato quando una decisione cambia o una fase è completata.
 
-Fasi 0 e 1 completate. Codice attuale in `backend/src/copione_audio/`:
+Fasi 0, 1 e 2 completate. Codice attuale in `backend/src/copione_audio/`:
 
 - `cli.py`: gruppo `click` con i comandi `text-to-audio` e `pdf-to-text`. Le cartelle formano la catena `pdf_folder/` → `input/` → `audio/`, relative alla cartella corrente.
 - `testo_audio.py`: divide il testo sul separatore `&` e lo legge con gTTS, tutto in memoria, aggiungendo il silenzio. È provvisorio: lo sostituiranno `piano.py` e `render.py` (Fase 3).
 - `copione/`: formato standard del copione (specifica in [`docs/formato-copione.md`](docs/formato-copione.md)). `analizza(testo) -> (Copione, errori)` unisce il parser (sintassi) e il validator (contenuto); gli errori hanno il numero di riga.
 - `conversione/pdf.py`: `estrai_testo(percorso) -> str` con pypdf.
+- `conversione/base.py`: interfaccia `Converter`. Le regole di conversione sono in `conversione/istruzioni.md`, l'unica fonte per la skill `converti-copione` e per il futuro convertitore locale: se cambiano, si aggiornano lì.
 
 ## Architettura obiettivo (in breve)
 
@@ -34,6 +35,7 @@ Fasi 0 e 1 completate. Codice attuale in `backend/src/copione_audio/`:
 cd backend && uv sync && uv run pytest              # dipendenze e test
 uv run --project backend copione-audio text-to-audio --split   # dalla radice
 uv run --project backend copione-audio pdf-to-text
+uv run --project backend copione-audio valida FILE.copione.txt  # riepilogo ed errori
 ```
 
 Servono FFmpeg installato e una connessione internet (il TTS è online).

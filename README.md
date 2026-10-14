@@ -75,6 +75,16 @@ Esempio: testo in inglese, separatore `|`, pause di 2 secondi.
 uv run --project backend copione-audio text-to-audio --language=en --split --row-separator="|" --silent-time-ms=2000
 ```
 
+### Controllare un copione
+
+Per convertire un PDF nel formato standard (`docs/formato-copione.md`) chiedi a Claude Code di usare la skill `converti-copione`. Per controllare un file `.copione.txt`:
+
+```bash
+uv run --project backend copione-audio valida "pdf_folder/Titolo.copione.txt"
+```
+
+Stampa scene, battute per personaggio ed errori con il numero di riga.
+
 ## Test
 
 ```bash
@@ -90,9 +100,10 @@ I test non usano la rete: il TTS viene sostituito da un finto sintetizzatore.
   - `cli.py`: CLI (`click`)
   - `copione/`: modello, parser e validator del formato standard del copione
   - `testo_audio.py`: generazione dell'audio dal testo con separatori (provvisorio, vedi Fase 3)
-  - `conversione/pdf.py`: estrazione del testo dai PDF
+  - `conversione/`: estrazione del testo dai PDF, interfaccia `Converter` e regole di conversione (`istruzioni.md`)
 - `backend/tests/`: test (pytest)
 - `docs/formato-copione.md`: specifica del formato del copione
+- `.claude/skills/converti-copione/`: skill che converte un PDF nel formato standard
 - `pdf_folder/`, `input/`, `audio/`: cartelle di lavoro (ignorate da git)
 - `REFACTOR.md`: piano della nuova versione
 - `CLAUDE.md`: note per chi sviluppa

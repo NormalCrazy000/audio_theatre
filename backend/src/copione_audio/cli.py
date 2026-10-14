@@ -3,10 +3,12 @@ CLI sottile sopra il core. Le cartelle seguono la catena
 `pdf_folder/` → `input/` → `audio/` e sono relative alla cartella corrente.
 """
 
+from collections import Counter
 from pathlib import Path
 
 import click
 
+from copione_audio.copione import analizza
 from copione_audio.conversione.pdf import estrai_testo
 from copione_audio.testo_audio import testo_ad_audio
 
@@ -157,3 +159,29 @@ def pdf_to_text(input_dir: Path, output_dir: Path):
             click.echo(f"Errore con '{percorso}': {e}", err=True)
         else:
             click.echo(f"'{percorso}' → '{uscita}'")
+
+
+@cli.command(name="valida")
+@click.argument(
+    "file", type=click.Path(exists=True, dir_okay=False, path_type=Path)
+)
+def valida_copione(file: Path):
+    """
+    Controlla un file .copione.txt: stampa un riepilogo e gli errori.
+    Esce con codice 1 se ci sono errori.
+    """
+    copione, errori = analizza(file.read_text(encoding="utf-8"))
+
+    click.echo(f"Titolo: {copione.titolo}  Lingua: {copione.lingua}")
+    click.echo(f"Scene: {len(copione.scene)}  Battute: {len(copione.battute)}")
+    # Una battuta detta insieme conta per ognuno dei personaggi.
+    conteggio = Counter(n for b in copione.battute for n in b.personaggi)
+    for nome in copione.personaggi:
+        click.echo(f"  {nome}: {conteggio[nome]}")
+
+    if errori:
+        click.echo(f"\n{len(errori)} errori:", err=True)
+        for errore in errori:
+            click.echo(f"  {errore}", err=True)
+        raise SystemExit(1)
+    click.echo("\nNessun errore.")
