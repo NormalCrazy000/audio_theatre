@@ -6,3 +6,7 @@ __pycache__/*
 *.py[cod]
 *$py.class
 pdf_folder/*
+# Ambiente e cache
+.venv/
+.pytest_cache/
+.ruff_cache/

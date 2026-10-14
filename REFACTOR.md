@@ -19,7 +19,7 @@ Obiettivo: passare da uno script CLI che legge un testo con separatori `&` inser
 
 L'ordine segue le dipendenze: prima il formato dei dati, poi la logica (testabile senza interfaccia), poi l'API e infine la UI. I punti della richiesta originale sono indicati tra parentesi.
 
-1. **Fase 0 – Pulizia e ristrutturazione**
+1. **Fase 0 – Pulizia e ristrutturazione** ✅
 2. **Fase 1 – Formato standard e parser** (punto 2)
 3. **Fase 2 – Conversione con skill Claude** (punto 2)
 4. **Fase 3 – Motore di generazione**: personaggio da studiare (5), personaggi inclusi (2), oscuramento (4), pause (3), contesto (6)
@@ -29,7 +29,9 @@ L'ordine segue le dipendenze: prima il formato dei dati, poi la logica (testabil
 
 ---
 
-### Fase 0 – Pulizia e ristrutturazione
+### Fase 0 – Pulizia e ristrutturazione ✅
+
+> Completata. Note: `testo_audio.py` conserva la logica col separatore `&` finché non arriva la Fase 3; la catena delle cartelle è `pdf_folder/` → `input/` → `audio/`; il file temporaneo su disco non serve più (l'audio resta in memoria).
 
 - Rinominare "test" in "text" ovunque (`TestToAudio`, `test_to_audio`).
 - Spostare la logica in un pacchetto (struttura sotto) e separarla da I/O e CLI.

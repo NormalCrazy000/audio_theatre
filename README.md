@@ -18,55 +18,79 @@ Applicazione Python per **studiare un copione**: trasforma il testo in un file a
 
 ## Installazione
 
+Il codice Python è in `backend/`:
+
 ```bash
+cd backend
 uv sync
 ```
 
 ## Come si usa
+
+I comandi si lanciano **dalla radice del progetto**. Le cartelle di lavoro formano una catena:
+
+```
+pdf_folder/  --pdf-to-text-->  input/  --text-to-audio-->  audio/
+```
+
+Tutte e tre vengono create se mancano e si possono cambiare con `--input-dir` e `--output-dir`.
 
 ### 1. (Opzionale) Da PDF a testo
 
 Metti i PDF in `pdf_folder/` ed esegui:
 
 ```bash
-uv run main.py pdf_to_text
+uv run --project backend copione-audio pdf-to-text
 ```
 
-I file `.txt` vengono creati **nella stessa cartella `pdf_folder/`**. Spostali in `input/` per il passo successivo.
+I file `.txt` vengono scritti in `input/`, pronti per il passo successivo.
 
 ### 2. Prepara il testo
 
-Nel file di testo inserisci il separatore `&` nei punti in cui vuoi una pausa, cioè dove tocca a te parlare. Metti i file in `input/`; la cartella viene creata al primo avvio.
+Nel file `.txt` in `input/` inserisci il separatore `&` nei punti in cui vuoi una pausa, cioè dove tocca a te parlare. Vengono letti solo i file `.txt`.
 
 ### 3. Genera l'audio
 
 ```bash
-uv run main.py test_to_audio --split=True
+uv run --project backend copione-audio text-to-audio --split
 ```
 
-Lo script mostra i parametri e aspetta che premi INVIO. Gli audio vengono salvati in `audio/`.
+Per ogni `nome.txt` viene creato `audio/nome.mp3`.
 
-### Opzioni di `test_to_audio`
+### Opzioni di `text-to-audio`
 
 | Opzione | Tipo | Default | Descrizione |
 | :--- | :--- | :--- | :--- |
-| `--split` | `bool` | `False` | Divide il testo sul separatore e inserisce le pause. |
+| `--split` / `--no-split` | flag | `--no-split` | Divide il testo sul separatore e inserisce le pause. |
 | `--out-audio-format` | `str` | `mp3` | Formato di uscita (`mp3`, `wav`, …). |
 | `--silent-time-ms` | `int` | `10000` | Durata di ogni pausa in millisecondi. |
 | `--language` | `str` | `it` | Lingua della sintesi vocale (`it`, `en`, …). |
 | `--row-separator` | `str` | `&` | Carattere che separa le parti. |
+| `--input-dir` | cartella | `input` | Dove leggere i `.txt`. |
+| `--output-dir` | cartella | `audio` | Dove salvare gli audio. |
 
 Esempio: testo in inglese, separatore `|`, pause di 2 secondi.
 
 ```bash
-uv run main.py test_to_audio --language="en" --split=True --row-separator="|" --silent-time-ms=2000
+uv run --project backend copione-audio text-to-audio --language=en --split --row-separator="|" --silent-time-ms=2000
 ```
+
+## Test
+
+```bash
+cd backend
+uv run pytest
+```
+
+I test non usano la rete: il TTS viene sostituito da un finto sintetizzatore.
 
 ## Struttura
 
-- `main.py`: CLI (`click`)
-- `text_to_audio.py`: generazione e unione degli audio
-- `pdf_to_text.py`: estrazione del testo dai PDF
-- `input/`, `pdf_folder/`, `audio/`, `temp/`: cartelle di lavoro (ignorate da git)
+- `backend/src/copione_audio/`: pacchetto Python
+  - `cli.py`: CLI (`click`)
+  - `testo_audio.py`: generazione dell'audio dal testo con separatori (provvisorio, vedi Fase 3)
+  - `conversione/pdf.py`: estrazione del testo dai PDF
+- `backend/tests/`: test (pytest)
+- `pdf_folder/`, `input/`, `audio/`: cartelle di lavoro (ignorate da git)
 - `REFACTOR.md`: piano della nuova versione
 - `CLAUDE.md`: note per chi sviluppa

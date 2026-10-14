@@ -10,18 +10,11 @@ Strumento per **studiare un copione**: genera un audio in cui il TTS legge le ba
 
 Il progetto è **in refactor**. Il piano, le decisioni prese e l'ordine delle fasi sono in [`REFACTOR.md`](REFACTOR.md). Va letto prima di qualsiasi modifica strutturale e aggiornato quando una decisione cambia o una fase è completata.
 
-Codice attuale (CLI, da sostituire):
+Fase 0 completata. Codice attuale in `backend/src/copione_audio/`:
 
-- `main.py`: gruppo `click` con i comandi `test_to_audio` e `pdf_to_text`.
-- `text_to_audio.py`: classe `TestToAudio` con metodi statici. Divide il testo su `&`, genera un mp3 per pezzo con gTTS in `temp/` (nomi `00001.mp3`…), li unisce con pydub aggiungendo silenzio e scrive in `audio/`.
-- `pdf_to_text.py`: estrae il testo dai PDF in `pdf_folder/` con pypdf e scrive i `.txt` nella stessa cartella.
-
-Bug noti, da correggere nella Fase 0 di `REFACTOR.md`:
-
-- vengono letti tutti i file di `input/`, non solo i `.txt`;
-- l'output si chiama `nome.txt.mp3`;
-- il prompt `input()` blocca l'uso non interattivo;
-- le cartelle di input/output dei due comandi non sono coerenti.
+- `cli.py`: gruppo `click` con i comandi `text-to-audio` e `pdf-to-text`. Le cartelle formano la catena `pdf_folder/` → `input/` → `audio/`, relative alla cartella corrente.
+- `testo_audio.py`: divide il testo sul separatore `&` e lo legge con gTTS, tutto in memoria, aggiungendo il silenzio. È provvisorio: lo sostituiranno `piano.py` e `render.py` (Fase 3).
+- `conversione/pdf.py`: `estrai_testo(percorso) -> str` con pypdf.
 
 ## Architettura obiettivo (in breve)
 
@@ -37,16 +30,16 @@ Bug noti, da correggere nella Fase 0 di `REFACTOR.md`:
 ## Comandi
 
 ```bash
-uv sync                               # dipendenze
-uv run main.py test_to_audio --split=True
-uv run main.py pdf_to_text
+cd backend && uv sync && uv run pytest              # dipendenze e test
+uv run --project backend copione-audio text-to-audio --split   # dalla radice
+uv run --project backend copione-audio pdf-to-text
 ```
 
 Servono FFmpeg installato e una connessione internet (il TTS è online).
 
 ## Convenzioni
 
-- Python 3.14, gestito con `uv`. Le dipendenze vanno in `pyproject.toml`.
+- Python 3.14, gestito con `uv`. Le dipendenze vanno in `backend/pyproject.toml`.
 - Lingua del progetto: **italiano**. Messaggi all'utente, docstring e documentazione sono in italiano; i nomi nel codice nuovo possono essere in italiano, purché coerenti.
 - Commit in stile Conventional Commits (`feat:`, `fix:`, `refactor:`, `chore:`).
 - La logica del piano audio deve restare testabile senza TTS né rete: il TTS si usa solo in `render.py`.
