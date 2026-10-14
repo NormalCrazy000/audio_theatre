@@ -88,9 +88,11 @@ I test non usano la rete: il TTS viene sostituito da un finto sintetizzatore.
 
 - `backend/src/copione_audio/`: pacchetto Python
   - `cli.py`: CLI (`click`)
+  - `copione/`: modello, parser e validator del formato standard del copione
   - `testo_audio.py`: generazione dell'audio dal testo con separatori (provvisorio, vedi Fase 3)
   - `conversione/pdf.py`: estrazione del testo dai PDF
 - `backend/tests/`: test (pytest)
+- `docs/formato-copione.md`: specifica del formato del copione
 - `pdf_folder/`, `input/`, `audio/`: cartelle di lavoro (ignorate da git)
 - `REFACTOR.md`: piano della nuova versione
 - `CLAUDE.md`: note per chi sviluppa

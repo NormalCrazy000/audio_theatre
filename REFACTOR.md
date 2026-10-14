@@ -13,6 +13,8 @@ Obiettivo: passare da uno script CLI che legge un testo con separatori `&` inser
 | Contesto (battute precedenti) | **Blocchi**: per ogni mia battuta si sentono le N battute precedenti, poi la mia. Con "tutto" si sente la scena intera una sola volta |
 | Pause | **Proporzionali** alla lunghezza della battuta, con moltiplicatore regolabile, più un **override per singola battuta** scritto nel file |
 | Battuta non oscurata | Viene letta, poi segue una pausa per ripeterla |
+| Battute dette insieme | `ROMEO e GIULIETTA: testo` (ammesse anche le virgole: `A, B e C:`). Se tra i nomi c'è il personaggio studiato, la battuta è sua |
+| Più personaggi studiati insieme | Non ora: TODO futuro (Fase 6) |
 | TTS | **edge-tts**, con una voce diversa per ogni personaggio, dietro un'interfaccia comune per poter aggiungere in futuro un motore offline (es. Piper) |
 
 ## Ordine delle fasi
@@ -20,7 +22,7 @@ Obiettivo: passare da uno script CLI che legge un testo con separatori `&` inser
 L'ordine segue le dipendenze: prima il formato dei dati, poi la logica (testabile senza interfaccia), poi l'API e infine la UI. I punti della richiesta originale sono indicati tra parentesi.
 
 1. **Fase 0 – Pulizia e ristrutturazione** ✅
-2. **Fase 1 – Formato standard e parser** (punto 2)
+2. **Fase 1 – Formato standard e parser** (punto 2) ✅
 3. **Fase 2 – Conversione con skill Claude** (punto 2)
 4. **Fase 3 – Motore di generazione**: personaggio da studiare (5), personaggi inclusi (2), oscuramento (4), pause (3), contesto (6)
 5. **Fase 4 – API FastAPI**
@@ -60,7 +62,9 @@ frontend/         Svelte + Vite
 .claude/skills/converti-copione/SKILL.md
 ```
 
-### Fase 1 – Formato standard del copione
+### Fase 1 – Formato standard del copione ✅
+
+> Completata. La specifica di riferimento ora è [`docs/formato-copione.md`](docs/formato-copione.md): se cambia il formato, va aggiornata lì. Il codice è in `backend/src/copione_audio/copione/` (`model.py`, `parser.py`, `validator.py`; `analizza(testo)` fa entrambe le cose). Precisazioni emerse: una riga vuota non interrompe una battuta; le battute prima del primo `#` formano una scena senza titolo; i nomi vanno scritti esattamente come nell'intestazione.
 
 File di testo UTF-8 con estensione `.copione.txt`:
 
@@ -85,6 +89,7 @@ Regole:
 
 - **Intestazione** tra `---`: `titolo`, `lingua` (codice per il TTS) e `personaggi`, cioè l'elenco completo dei nomi ammessi.
 - **Battuta**: `NOME: testo` a inizio riga. Le righe successive indentate continuano la stessa battuta.
+- **Battuta detta insieme**: `ROMEO e GIULIETTA: testo`, oppure `ROMEO, BALIA e GIULIETTA: testo`. Ogni nome deve essere dichiarato.
 - **Override della pausa**: `NOME [pausa=SECONDI]: testo`.
 - **Scena**: una riga che inizia con `#`. Serve a scegliere le scene e ad azzerare il contesto.
 - **Didascalia**: una riga tra parentesi `( … )`. Di default non viene letta (diventa un'opzione).
@@ -116,7 +121,7 @@ Opzioni:
 
 | Opzione | Punto | Descrizione |
 | :--- | :--- | :--- |
-| `personaggio` | 5 | Il personaggio da studiare. |
+| `personaggio` | 5 | Il personaggio da studiare. Una battuta detta insieme che lo include è sua. |
 | `personaggi_inclusi` | 2 | Le battute degli altri personaggi da far sentire. Le battute degli esclusi vengono saltate del tutto. Di default tutti. |
 | `modalita_battuta` | 4 | `muta`: al posto della battuta c'è solo silenzio. `letta`: la battuta viene letta e poi c'è la pausa per ripeterla. In futuro anche `verifica`: prima la pausa, poi la battuta letta. |
 | `pausa` | 3 | Durata = durata TTS della mia battuta (calcolata anche se è muta) × `moltiplicatore` (default 1.2), limitata tra `min_s` e `max_s`. Il `[pausa=N]` scritto nel file ha la precedenza. |
@@ -155,6 +160,7 @@ Le impostazioni si ricordano nel browser.
 
 - **Eseguibile ovunque**: un `Dockerfile` unico, ed eventualmente il deploy su un servizio gratuito (Render, Fly.io, Hugging Face Spaces).
 - **Modello locale**: `OllamaConverter` integrato nell'upload del PDF.
+- **Più personaggi studiati insieme** (es. due ruoli piccoli): `personaggio` diventa un elenco.
 - **TTS offline**: un motore Piper dietro `TTSEngine`.
 - **Player interattivo** nel browser.
 
@@ -162,7 +168,5 @@ Le impostazioni si ricordano nel browser.
 
 ## Domande aperte
 
-- Si può studiare **più di un personaggio** alla volta, per esempio due ruoli piccoli?
-- Come si gestiscono le battute dette insieme (`TUTTI:`, `ROMEO e GIULIETTA:`)?
 - L'app resta solo in locale o va pubblicata online? Se va online servono limiti di uso e forse un login.
 - Lo stacco tra i blocchi deve essere silenzio o un segnale sonoro?
