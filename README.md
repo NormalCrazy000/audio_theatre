@@ -14,7 +14,7 @@ Applicazione Python per **studiare un copione**: trasforma il testo in un file a
   - Ubuntu/Debian: `sudo apt install ffmpeg`
   - macOS: `brew install ffmpeg`
   - Windows: scaricalo e aggiungilo al PATH
-- **Connessione internet**: la sintesi vocale usa gTTS (Google)
+- **Connessione internet**: la sintesi vocale usa edge-tts (voci neurali Microsoft)
 
 ## Installazione
 
@@ -27,63 +27,62 @@ uv sync
 
 ## Come si usa
 
-I comandi si lanciano **dalla radice del progetto**. Le cartelle di lavoro formano una catena:
+I comandi si lanciano **dalla radice del progetto**.
 
-```
-pdf_folder/  --pdf-to-text-->  input/  --text-to-audio-->  audio/
-```
+### 1. Prepara il copione
 
-Tutte e tre vengono create se mancano e si possono cambiare con `--input-dir` e `--output-dir`.
+Serve un file `.copione.txt` nel formato standard (vedi [`docs/formato-copione.md`](docs/formato-copione.md)). Puoi:
 
-### 1. (Opzionale) Da PDF a testo
+- scriverlo a mano;
+- partire da un PDF e chiedere a Claude Code di convertirlo con la skill `converti-copione`.
 
-Metti i PDF in `pdf_folder/` ed esegui:
-
-```bash
-uv run --project backend copione-audio pdf-to-text
-```
-
-I file `.txt` vengono scritti in `input/`, pronti per il passo successivo.
-
-### 2. Prepara il testo
-
-Nel file `.txt` in `input/` inserisci il separatore `&` nei punti in cui vuoi una pausa, cioè dove tocca a te parlare. Vengono letti solo i file `.txt`.
-
-### 3. Genera l'audio
-
-```bash
-uv run --project backend copione-audio text-to-audio --split
-```
-
-Per ogni `nome.txt` viene creato `audio/nome.mp3`.
-
-### Opzioni di `text-to-audio`
-
-| Opzione | Tipo | Default | Descrizione |
-| :--- | :--- | :--- | :--- |
-| `--split` / `--no-split` | flag | `--no-split` | Divide il testo sul separatore e inserisce le pause. |
-| `--out-audio-format` | `str` | `mp3` | Formato di uscita (`mp3`, `wav`, …). |
-| `--silent-time-ms` | `int` | `10000` | Durata di ogni pausa in millisecondi. |
-| `--language` | `str` | `it` | Lingua della sintesi vocale (`it`, `en`, …). |
-| `--row-separator` | `str` | `&` | Carattere che separa le parti. |
-| `--input-dir` | cartella | `input` | Dove leggere i `.txt`. |
-| `--output-dir` | cartella | `audio` | Dove salvare gli audio. |
-
-Esempio: testo in inglese, separatore `|`, pause di 2 secondi.
-
-```bash
-uv run --project backend copione-audio text-to-audio --language=en --split --row-separator="|" --silent-time-ms=2000
-```
-
-### Controllare un copione
-
-Per convertire un PDF nel formato standard (`docs/formato-copione.md`) chiedi a Claude Code di usare la skill `converti-copione`. Per controllare un file `.copione.txt`:
+Per controllarlo:
 
 ```bash
 uv run --project backend copione-audio valida "pdf_folder/Titolo.copione.txt"
 ```
 
 Stampa scene, battute per personaggio ed errori con il numero di riga.
+
+### 2. Genera l'audio
+
+```bash
+uv run --project backend copione-audio genera "pdf_folder/Titolo.copione.txt" -p LAURA
+```
+
+Crea `audio/Titolo.LAURA.mp3`. Per ogni battuta di LAURA si sentono le 3 battute precedenti, poi c'è una pausa per dirla. Le didascalie, anche quelle tra parentesi dentro le battute, non vengono lette.
+
+### Opzioni di `genera`
+
+| Opzione | Default | Descrizione |
+| :--- | :--- | :--- |
+| `-p`, `--personaggio` | (obbligatoria) | Il personaggio da studiare. |
+| `--includi NOME` | tutti | Personaggi da far sentire (ripetibile). Le battute degli altri vengono saltate. |
+| `--modalita` | `muta` | `muta`: solo la pausa. `letta`: la battuta viene letta, poi c'è la pausa per ripeterla. |
+| `--contesto` | `3` | Battute precedenti da sentire prima di ogni tua battuta, oppure `tutto` per ascoltare la scena intera una volta. |
+| `--moltiplicatore` | `1.2` | Durata della pausa rispetto alla lettura della tua battuta. |
+| `--pausa-min`, `--pausa-max` | `1.5`, `30` | Limiti della pausa in secondi. `[pausa=N]` nel copione ha la precedenza. |
+| `--stacco` | `1.5` | Silenzio tra un blocco e l'altro, in secondi. |
+| `--scena N` | tutte | Scene da includere, numerate da 1 (ripetibile). |
+| `--leggi-didascalie` | no | Legge anche le didascalie. |
+| `--voce NOME=VOCE` | automatica | Voce di un personaggio, es. `GIULIA=it-IT-ElsaNeural` (ripetibile). |
+| `-o`, `--output` | `audio/…mp3` | File di uscita. |
+
+Le voci vengono assegnate in automatico. Il genere del personaggio non è noto, quindi conviene indicarle con `--voce`. Per vedere le voci disponibili:
+
+```bash
+uv run --project backend copione-audio voci --lingua it
+```
+
+Le battute sintetizzate vengono salvate in `~/.cache/copione-audio/`: rigenerare con opzioni diverse è molto più veloce.
+
+### Da PDF a testo grezzo
+
+```bash
+uv run --project backend copione-audio pdf-to-text
+```
+
+Estrae il testo dei PDF di `pdf_folder/` in `input/`. Di solito non serve: lo fa già la skill.
 
 ## Test
 
@@ -99,7 +98,9 @@ I test non usano la rete: il TTS viene sostituito da un finto sintetizzatore.
 - `backend/src/copione_audio/`: pacchetto Python
   - `cli.py`: CLI (`click`)
   - `copione/`: modello, parser e validator del formato standard del copione
-  - `testo_audio.py`: generazione dell'audio dal testo con separatori (provvisorio, vedi Fase 3)
+  - `piano.py`: dal copione e dalle opzioni calcola la sequenza di segmenti (funzione pura)
+  - `render.py`: dai segmenti produce l'audio
+  - `tts/`: interfaccia `TTSEngine`, edge-tts, cache su disco e assegnazione delle voci
   - `conversione/`: estrazione del testo dai PDF, interfaccia `Converter` e regole di conversione (`istruzioni.md`)
 - `backend/tests/`: test (pytest)
 - `docs/formato-copione.md`: specifica del formato del copione

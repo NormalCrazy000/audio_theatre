@@ -24,7 +24,7 @@ L'ordine segue le dipendenze: prima il formato dei dati, poi la logica (testabil
 1. **Fase 0 – Pulizia e ristrutturazione** ✅
 2. **Fase 1 – Formato standard e parser** (punto 2) ✅
 3. **Fase 2 – Conversione con skill Claude** (punto 2) ✅
-4. **Fase 3 – Motore di generazione**: personaggio da studiare (5), personaggi inclusi (2), oscuramento (4), pause (3), contesto (6)
+4. **Fase 3 – Motore di generazione**: personaggio da studiare (5), personaggi inclusi (2), oscuramento (4), pause (3), contesto (6) ✅
 5. **Fase 4 – API FastAPI**
 6. **Fase 5 – Frontend Svelte** (punto 1)
 7. **Fase 6 – Opzionale**: eseguibile ovunque (punto 1), modello locale, TTS offline
@@ -33,7 +33,7 @@ L'ordine segue le dipendenze: prima il formato dei dati, poi la logica (testabil
 
 ### Fase 0 – Pulizia e ristrutturazione ✅
 
-> Completata. Note: `testo_audio.py` conserva la logica col separatore `&` finché non arriva la Fase 3; la catena delle cartelle è `pdf_folder/` → `input/` → `audio/`; il file temporaneo su disco non serve più (l'audio resta in memoria).
+> Completata. Note: `testo_audio.py` conserva la logica col separatore `&` finché non arriva la Fase 3 (poi rimosso, insieme a gTTS); la catena delle cartelle è `pdf_folder/` → `input/` → `audio/`; il file temporaneo su disco non serve più (l'audio resta in memoria).
 
 - Rinominare "test" in "text" ovunque (`TestToAudio`, `test_to_audio`).
 - Spostare la logica in un pacchetto (struttura sotto) e separarla da I/O e CLI.
@@ -112,7 +112,16 @@ Da fare: un parser con test, e la specifica copiata in `docs/formato-copione.md`
   Alla fine esegue il validator e corregge gli eventuali errori.
 - Interfaccia `Converter` (`testo_grezzo -> str copione`). La skill viene usata fuori dall'app; il futuro `OllamaConverter` la implementerà dentro l'app, con lo stesso prompt e lo stesso validator.
 
-### Fase 3 – Motore di generazione
+### Fase 3 – Motore di generazione ✅
+
+> Completata. Comando `copione-audio genera`. Collaudo su *Così non vale*: LAURA, scena 4, 5,4 minuti di audio in circa 20 s; le esecuzioni successive usano la cache. Decisioni prese durante l'implementazione:
+>
+> - **Didascalie dentro le battute**: il testo tra parentesi viene tolto prima della lettura, salvo `leggi_didascalie`. Una battuta fatta solo di gesti (`A: (annuisce)`): se è di un altro personaggio viene saltata; se è la mia, resta la pausa minima.
+> - **Contesto N**: conta solo le battute altrui che si sentono. Le mie battute precedenti che cadono nel blocco si sentono solo in modalità `letta`, senza pausa. Le scene in cui il personaggio non parla vengono saltate.
+> - **Battuta detta insieme e altrui**: la legge la voce del primo personaggio incluso.
+> - **Voci**: edge-tts ha 4 voci italiane (2 maschili e 2 femminili). L'assegnazione automatica alterna i generi e, quando le voci finiscono, cambia il tono. Il genere dei personaggi non è noto: si correggono con `--voce`.
+> - **Valori predefiniti**: contesto 3, pausa minima 1,5 s, massima 30 s, stacco 1,5 s, 0,4 s di respiro dopo ogni battuta letta.
+> - Lo stacco tra i blocchi è un silenzio; il segnale sonoro resta una domanda aperta.
 
 Si divide in due passi:
 
