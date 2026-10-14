@@ -12,7 +12,6 @@ Il progetto è **in refactor**. Il piano, le decisioni prese e l'ordine delle fa
 
 Fasi 0–4 completate. Codice attuale in `backend/src/copione_audio/`:
 
-- `cli.py`: gruppo `click` con i comandi `genera`, `valida`, `voci`, `pdf-to-text` e `server`.
 - `api/main.py`: FastAPI, `crea_app()`. Endpoint sotto `/api`; l'audio è un job asincrono (`POST /api/audio` → stato → `/mp3`). Il TTS arriva dalla dipendenza `motore_tts`, che nei test si sostituisce con `dependency_overrides`. Se esiste `frontend/dist` (o `$COPIONE_AUDIO_FRONTEND`) viene servito su `/`.
 - `piano.py`: `crea_piano(copione, Opzioni) -> [Parla | Silenzio | Pausa]`, una funzione pura. Toglie le didascalie tra parentesi dal testo letto, salvo `leggi_didascalie`. `Pausa` dipende dalla durata della lettura e viene risolta dal render.
 - `render.py`: `async render(segmenti, voci, motore)`. Sintetizza ogni (personaggio, testo) una volta sola, in parallelo, poi monta l'audio.
@@ -36,10 +35,8 @@ Fasi 0–4 completate. Codice attuale in `backend/src/copione_audio/`:
 
 ```bash
 cd backend && uv sync && uv run pytest              # dipendenze e test
-uv run --project backend copione-audio genera FILE.copione.txt -p NOME   # dalla radice
-uv run --project backend copione-audio server --reload   # API su http://127.0.0.1:8000 (docs su /docs)
-uv run --project backend copione-audio pdf-to-text
-uv run --project backend copione-audio valida FILE.copione.txt  # riepilogo ed errori
+uv run --project backend uvicorn copione_audio.api.main:app --reload   # dalla radice; API su :8000, docs su /docs
+uv run --project backend python .claude/skills/converti-copione/valida.py FILE.copione.txt  # controlla un copione
 ```
 
 Servono FFmpeg installato e una connessione internet (il TTS è online).

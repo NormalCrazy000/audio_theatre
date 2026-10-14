@@ -19,7 +19,7 @@ Tutti i comandi vanno lanciati dalla radice del progetto.
 Se l'input è un PDF:
 
 ```bash
-uv run --project backend python -c "import sys; from copione_audio.conversione.pdf import estrai_testo; print(estrai_testo(sys.argv[1]))" "percorso/copione.pdf" > <scratchpad>/grezzo.txt
+uv run --project backend python .claude/skills/converti-copione/estrai.py "percorso/copione.pdf" > <scratchpad>/grezzo.txt
 ```
 
 Se è già testo, usalo così com'è.
@@ -44,10 +44,10 @@ Salva il risultato accanto all'originale, con lo stesso nome ed estensione `.cop
 ### 4. Valida e correggi
 
 ```bash
-uv run --project backend copione-audio valida "percorso/Titolo.copione.txt"
+uv run --project backend python .claude/skills/converti-copione/valida.py "percorso/Titolo.copione.txt"
 ```
 
-Il comando stampa scene, battute per personaggio ed errori con il numero di riga, ed esce con codice 1 se ci sono errori. Correggi e ripeti finché non dice `Nessun errore.`
+Lo script stampa le battute per personaggio e per scena e gli errori con il numero di riga, ed esce con codice 1 se ci sono errori. Correggi e ripeti finché non dice `Nessun errore.`
 
 Correggi la causa nello script quando un errore si ripete; usa le modifiche a mano solo per i casi isolati.
 
@@ -55,7 +55,7 @@ Correggi la causa nello script quando un errore si ripete; usa le modifiche a ma
 
 Un file senza errori può comunque essere sbagliato. Prima di consegnare:
 
-1. Se il copione ha un conteggio delle battute, confrontalo con quello di `valida` e spiega ogni differenza.
+1. Se il copione ha un conteggio delle battute (per personaggio o per scena), confrontalo con quello di `valida.py`. Spiega ogni differenza: controlla anche nel testo grezzo, perché il conteggio del copione può essere sbagliato o vecchio.
 2. Confronta a campione con il testo grezzo l'inizio, la fine e almeno tre cambi di pagina.
 3. Cerca battute sospette: molto lunghe (due battute fuse), che contengono `NOME:` di un altro personaggio, o che finiscono a metà frase.
 

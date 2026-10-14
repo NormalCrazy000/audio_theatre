@@ -2,7 +2,7 @@
 API HTTP. Tutti gli endpoint stanno sotto `/api`; se esiste la build del
 frontend, viene servita su `/`.
 
-Avvio: `copione-audio server`, oppure `uvicorn copione_audio.api.main:app`.
+Avvio (dalla radice): `uv run --project backend uvicorn copione_audio.api.main:app`.
 """
 
 import asyncio

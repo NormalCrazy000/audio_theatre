@@ -42,7 +42,7 @@ L'ordine segue le dipendenze: prima il formato dei dati, poi la logica (testabil
   - l'output si chiama `nome.txt.mp3`;
   - `input("Premi INVIO")` blocca l'uso non interattivo;
   - le cartelle di input/output di `pdf_to_text` e `text_to_audio` non sono coerenti (vedi `TODO.md`).
-- La CLI resta come wrapper sottile sopra il core: è utile per i test e per l'uso da script.
+- ~~La CLI resta come wrapper sottile sopra il core.~~ Decisione cambiata dopo la Fase 4: **la CLI è stata rimossa**, l'app si usa dall'interfaccia web. La skill `converti-copione` ha i suoi script (`estrai.py`, `valida.py`).
 
 Struttura proposta:
 
@@ -56,7 +56,6 @@ backend/
     piano.py      dal copione e dalle opzioni calcola la sequenza di segmenti audio
     render.py     dai segmenti produce l'mp3 (pydub)
     api/          main.py (FastAPI)
-    cli.py
   tests/
 frontend/         Svelte + Vite
 .claude/skills/converti-copione/SKILL.md
@@ -100,7 +99,7 @@ Da fare: un parser con test, e la specifica copiata in `docs/formato-copione.md`
 
 ### Fase 2 – Conversione PDF/testo → formato standard ✅
 
-> Completata. Le regole di conversione stanno in `backend/src/copione_audio/conversione/istruzioni.md` (fonte unica per la skill e per il futuro `OllamaConverter`); la skill aggiunge solo il procedimento. `copione-audio valida FILE` stampa errori e battute per personaggio. Collaudo su *Così non vale* (PDF di 48 pagine): 19 scene, 1109 battute, nessun errore; i conteggi per scena coincidono con il testo grezzo. Per copioni lunghi e regolari la skill scrive uno script usa e getta e corregge a mano il resto.
+> Completata. Le regole di conversione stanno in `backend/src/copione_audio/conversione/istruzioni.md` (fonte unica per la skill e per il futuro `OllamaConverter`); la skill aggiunge solo il procedimento. `valida.py` (nella cartella della skill) stampa errori e battute per personaggio e per scena. Collaudo su *Così non vale* (PDF di 48 pagine): 19 scene, 1109 battute, nessun errore; i conteggi per scena coincidono con il testo grezzo. Per copioni lunghi e regolari la skill scrive uno script usa e getta e corregge a mano il resto.
 
 - `conversione/pdf.py`: estrazione del testo grezzo dal PDF (riusa l'attuale `pdf_to_text.py`).
 - **Skill Claude** `.claude/skills/converti-copione/`: riceve PDF o testo grezzo e produce un `.copione.txt` valido. Deve:
@@ -114,7 +113,7 @@ Da fare: un parser con test, e la specifica copiata in `docs/formato-copione.md`
 
 ### Fase 3 – Motore di generazione ✅
 
-> Completata. Comando `copione-audio genera`. Collaudo su *Così non vale*: LAURA, scena 4, 5,4 minuti di audio in circa 20 s; le esecuzioni successive usano la cache. Decisioni prese durante l'implementazione:
+> Completata. Collaudo su *Così non vale*: LAURA, scena 4, 5,4 minuti di audio in circa 20 s; le esecuzioni successive usano la cache. Decisioni prese durante l'implementazione:
 >
 > - **Didascalie dentro le battute**: il testo tra parentesi viene tolto prima della lettura, salvo `leggi_didascalie`. Una battuta fatta solo di gesti (`A: (annuisce)`): se è di un altro personaggio viene saltata; se è la mia, resta la pausa minima.
 > - **Contesto N**: conta solo le battute altrui che si sentono. Le mie battute precedenti che cadono nel blocco si sentono solo in modalità `letta`, senza pausa. Le scene in cui il personaggio non parla vengono saltate.
@@ -143,7 +142,7 @@ Opzioni:
 
 ### Fase 4 – API FastAPI ✅
 
-> Completata (`backend/src/copione_audio/api/main.py`, avvio con `copione-audio server`; documentazione interattiva su `/docs`). Rispetto al piano:
+> Completata (`backend/src/copione_audio/api/main.py`, avvio con `uvicorn copione_audio.api.main:app`; documentazione interattiva su `/docs`). Rispetto al piano:
 >
 > - tutti gli endpoint stanno sotto **`/api`** (es. `POST /api/copioni/analizza`), così non si scontrano con il frontend servito su `/`;
 > - `analizza` e `audio` ricevono il copione come JSON `{"testo": …}`: il frontend legge il file nel browser;

@@ -27,8 +27,6 @@ uv sync
 
 ## Come si usa
 
-I comandi si lanciano **dalla radice del progetto**.
-
 ### 1. Prepara il copione
 
 Serve un file `.copione.txt` nel formato standard (vedi [`docs/formato-copione.md`](docs/formato-copione.md)). Puoi:
@@ -36,53 +34,15 @@ Serve un file `.copione.txt` nel formato standard (vedi [`docs/formato-copione.m
 - scriverlo a mano;
 - partire da un PDF e chiedere a Claude Code di convertirlo con la skill `converti-copione`.
 
-Per controllarlo:
+### 2. Avvia il server
+
+Dalla radice del progetto:
 
 ```bash
-uv run --project backend copione-audio valida "pdf_folder/Titolo.copione.txt"
+uv run --project backend uvicorn copione_audio.api.main:app
 ```
 
-Stampa scene, battute per personaggio ed errori con il numero di riga.
-
-### 2. Genera l'audio
-
-```bash
-uv run --project backend copione-audio genera "pdf_folder/Titolo.copione.txt" -p LAURA
-```
-
-Crea `audio/Titolo.LAURA.mp3`. Per ogni battuta di LAURA si sentono le 3 battute precedenti, poi c'è una pausa per dirla. Le didascalie, anche quelle tra parentesi dentro le battute, non vengono lette.
-
-### Opzioni di `genera`
-
-| Opzione | Default | Descrizione |
-| :--- | :--- | :--- |
-| `-p`, `--personaggio` | (obbligatoria) | Il personaggio da studiare. |
-| `--includi NOME` | tutti | Personaggi da far sentire (ripetibile). Le battute degli altri vengono saltate. |
-| `--modalita` | `muta` | `muta`: solo la pausa. `letta`: la battuta viene letta, poi c'è la pausa per ripeterla. |
-| `--contesto` | `3` | Battute precedenti da sentire prima di ogni tua battuta, oppure `tutto` per ascoltare la scena intera una volta. |
-| `--moltiplicatore` | `1.2` | Durata della pausa rispetto alla lettura della tua battuta. |
-| `--pausa-min`, `--pausa-max` | `1.5`, `30` | Limiti della pausa in secondi. `[pausa=N]` nel copione ha la precedenza. |
-| `--stacco` | `1.5` | Silenzio tra un blocco e l'altro, in secondi. |
-| `--scena N` | tutte | Scene da includere, numerate da 1 (ripetibile). |
-| `--leggi-didascalie` | no | Legge anche le didascalie. |
-| `--voce NOME=VOCE` | automatica | Voce di un personaggio, es. `GIULIA=it-IT-ElsaNeural` (ripetibile). |
-| `-o`, `--output` | `audio/…mp3` | File di uscita. |
-
-Le voci vengono assegnate in automatico. Il genere del personaggio non è noto, quindi conviene indicarle con `--voce`. Per vedere le voci disponibili:
-
-```bash
-uv run --project backend copione-audio voci --lingua it
-```
-
-Le battute sintetizzate vengono salvate in `~/.cache/copione-audio/`: rigenerare con opzioni diverse è molto più veloce.
-
-### Server (API)
-
-```bash
-uv run --project backend copione-audio server
-```
-
-Avvia l'API su <http://127.0.0.1:8000>. La documentazione interattiva è su <http://127.0.0.1:8000/docs>. L'interfaccia web (in arrivo) userà questa API.
+Il server ascolta su <http://127.0.0.1:8000>. La documentazione interattiva dell'API è su <http://127.0.0.1:8000/docs>.
 
 | Endpoint | Descrizione |
 | :--- | :--- |
@@ -93,13 +53,7 @@ Avvia l'API su <http://127.0.0.1:8000>. La documentazione interattiva è su <htt
 | `GET /api/audio/{id}` | Stato e progresso |
 | `GET /api/audio/{id}/mp3` | Scarica l'mp3 |
 
-### Da PDF a testo grezzo
-
-```bash
-uv run --project backend copione-audio pdf-to-text
-```
-
-Estrae il testo dei PDF di `pdf_folder/` in `input/`. Di solito non serve: lo fa già la skill.
+Le battute sintetizzate vengono salvate in `~/.cache/copione-audio/`: rigenerare con opzioni diverse è molto più veloce.
 
 ## Test
 
@@ -113,7 +67,6 @@ I test non usano la rete: il TTS viene sostituito da un finto sintetizzatore.
 ## Struttura
 
 - `backend/src/copione_audio/`: pacchetto Python
-  - `cli.py`: CLI (`click`)
   - `api/`: API FastAPI
   - `copione/`: modello, parser e validator del formato standard del copione
   - `piano.py`: dal copione e dalle opzioni calcola la sequenza di segmenti (funzione pura)
