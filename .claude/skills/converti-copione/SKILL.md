@@ -24,6 +24,11 @@ uv run --project backend python .claude/skills/converti-copione/estrai.py "perco
 
 Se è già testo, usalo così com'è.
 
+Se il testo estratto ha **parole spezzate** (`sc ena`, `persona ggi`) o non si distinguono parlato e didascalie, prova gli strumenti di poppler:
+
+- `pdftotext -layout FILE.pdf out.txt`: parole intere e rientri conservati;
+- `pdftohtml -xml -i -q FILE.pdf out`: ogni riga con posizione e stile (`<b>`, `<i>`). Molti copioni scrivono i nomi in grassetto e le didascalie in corsivo: classificare per font è molto più affidabile che per posizione. Le righe con `top` vicini (entro pochi pixel) sono la stessa riga.
+
 ### 2. Studia la struttura
 
 Leggi l'inizio, una parte centrale e la fine del testo grezzo. Annota:
@@ -55,9 +60,10 @@ Correggi la causa nello script quando un errore si ripete; usa le modifiche a ma
 
 Un file senza errori può comunque essere sbagliato. Prima di consegnare:
 
-1. Se il copione ha un conteggio delle battute (per personaggio o per scena), confrontalo con quello di `valida.py`. Spiega ogni differenza: controlla anche nel testo grezzo, perché il conteggio del copione può essere sbagliato o vecchio.
-2. Confronta a campione con il testo grezzo l'inizio, la fine e almeno tre cambi di pagina.
-3. Cerca battute sospette: molto lunghe (due battute fuse), che contengono `NOME:` di un altro personaggio, o che finiscono a metà frase.
+1. Se il copione ha un conteggio delle battute (per personaggio o per scena), confrontalo con quello di `valida.py`. Spiega ogni differenza: controlla anche nel testo grezzo, perché il conteggio del copione può essere sbagliato o vecchio. Se non c'è, conta le righe di nome nel testo grezzo (per esempio i grassetti) e confrontale.
+2. Verifica che nessuna parola del parlato sia andata persa: confronta le parole del parlato nel testo grezzo con quelle delle battute (senza le parti tra parentesi).
+3. Confronta a campione con il testo grezzo l'inizio, la fine e almeno tre cambi di pagina.
+4. Cerca battute sospette: molto lunghe (due battute fuse), che contengono `NOME:` di un altro personaggio, o che finiscono a metà frase.
 
 ### 6. Riferisci all'utente
 
