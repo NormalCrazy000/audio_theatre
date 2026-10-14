@@ -27,6 +27,8 @@ Frontend in `frontend/` (Svelte 5 con rune, Vite, TypeScript):
 - `src/lib/impostazioni.ts` salva le impostazioni nel `localStorage`, con ogni accesso protetto da try/catch;
 - in sviluppo Vite inoltra `/api` a `127.0.0.1:8000`; in produzione FastAPI serve `frontend/dist`.
 
+`Dockerfile` (radice, multi-stage): build del frontend con Node, dipendenze con `uv sync --frozen --no-dev --no-editable`, immagine finale `python:3.14-slim` con ffmpeg e utente non root. Il frontend arriva tramite `COPIONE_AUDIO_FRONTEND` e la cache TTS sta in `XDG_CACHE_HOME=/data/cache`, che è un volume.
+
 ## Architettura obiettivo (in breve)
 
 - `backend/`: FastAPI con un pacchetto `copione_audio`, diviso in:
@@ -47,6 +49,7 @@ uv run --project backend python .claude/skills/converti-copione/valida.py FILE.c
 cd frontend && npm run dev     # UI in sviluppo (serve anche il backend)
 cd frontend && npm run check   # controllo tipi Svelte
 cd frontend && npm run build   # build servita da FastAPI
+docker build -t copione-audio . && docker run -p 8000:8000 -v copione-audio-cache:/data/cache copione-audio
 ```
 
 Servono FFmpeg installato e una connessione internet (il TTS è online).

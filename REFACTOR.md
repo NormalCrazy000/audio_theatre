@@ -186,7 +186,7 @@ Le impostazioni si ricordano nel browser.
 
 ### Fase 6 – Opzionale
 
-- **Eseguibile ovunque**: un `Dockerfile` unico, ed eventualmente il deploy su un servizio gratuito (Render, Fly.io, Hugging Face Spaces).
+- **Eseguibile ovunque**: un `Dockerfile` unico ✅ (multi-stage: Node per il frontend, uv per il backend, `python:3.14-slim` con ffmpeg; cache TTS nel volume `/data/cache`). Resta eventualmente il deploy su un servizio gratuito (Render, Fly.io, Hugging Face Spaces).
 - **Modello locale**: `OllamaConverter` integrato nell'upload del PDF.
 - **Più personaggi studiati insieme** (es. due ruoli piccoli): `personaggio` diventa un elenco.
 - **TTS offline**: un motore Piper dietro `TTSEngine`.

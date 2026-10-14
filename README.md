@@ -4,7 +4,20 @@ Applicazione Python per **studiare un copione**: trasforma il testo in un file a
 
 Si usa da un'interfaccia web: carichi il copione, scegli il personaggio, le battute da ascoltare, le pause e le voci, e scarichi l'mp3. Il piano del progetto è in [`REFACTOR.md`](REFACTOR.md).
 
-## Prerequisiti
+## Con Docker (il modo più semplice)
+
+Serve solo Docker. Dalla radice del progetto:
+
+```bash
+docker build -t copione-audio .
+docker run -p 8000:8000 -v copione-audio-cache:/data/cache copione-audio
+```
+
+Apri <http://localhost:8000>. Il volume `copione-audio-cache` conserva le battute già sintetizzate tra un avvio e l'altro. Il TTS richiede comunque internet.
+
+## Senza Docker
+
+### Prerequisiti
 
 - **Python** 3.14 o superiore
 - **uv** come gestore pacchetti
@@ -15,7 +28,7 @@ Si usa da un'interfaccia web: carichi il copione, scegli il personaggio, le batt
   - Windows: scaricalo e aggiungilo al PATH
 - **Connessione internet**: la sintesi vocale usa edge-tts (voci neurali Microsoft)
 
-## Installazione
+### Installazione
 
 ```bash
 cd backend && uv sync && cd ..

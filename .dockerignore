@@ -1,0 +1,16 @@
+# Solo ciò che serve alla build: niente ambienti, build, dati personali o git.
+.git
+.venv
+**/.venv
+**/node_modules
+**/dist
+**/__pycache__
+**/*.py[cod]
+.ruff_cache
+**/.pytest_cache
+.claude
+audio
+input
+temp
+pdf_folder
+*.mp3
