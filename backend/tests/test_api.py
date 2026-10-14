@@ -142,3 +142,19 @@ def test_frontend_servito_se_presente(tmp_path, finto_tts):
     with TestClient(app) as client:
         assert client.get("/").text == "<h1>ciao</h1>"
         assert client.post("/api/copioni/analizza", json={"testo": COPIONE}).status_code == 200
+
+
+def test_assegna_voci(client):
+    risposta = client.post("/api/voci/assegna", json={"lingua": "it", "personaggi": ["A", "B"]})
+    assert risposta.json() == {
+        "A": {"nome": "finta", "tono": "+0Hz", "velocita": "+0%"},
+        "B": {"nome": "finta", "tono": "-12Hz", "velocita": "+0%"},
+        "NARRATORE": {"nome": "finta", "tono": "+12Hz", "velocita": "+0%"},
+    }
+
+
+def test_anteprima(client, finto_tts):
+    risposta = client.post("/api/voci/anteprima", json={"voce": {"nome": "x", "tono": "+12Hz"}})
+    assert risposta.status_code == 200
+    assert risposta.headers["content-type"] == "audio/wav"
+    assert finto_tts.richieste[0][1].tono == "+12Hz"

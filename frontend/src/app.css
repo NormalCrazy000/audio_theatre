@@ -1,0 +1,203 @@
+:root {
+  --sfondo: #f6f5fb;
+  --superficie: #ffffff;
+  --testo: #1c1a24;
+  --tenue: #6b6878;
+  --bordo: #e4e1ee;
+  --bordo-forte: #c9c4da;
+  --accento: #6d3fd9;
+  --accento-tenue: #efe9fd;
+  --su-accento: #ffffff;
+  --errore: #c0263b;
+  --errore-tenue: #fdecee;
+  --successo: #1d7a4a;
+  --successo-tenue: #e5f6ec;
+  --raggio: 0.75rem;
+  --mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--testo);
+  background: var(--sfondo);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sfondo: #131219;
+    --superficie: #1c1a25;
+    --testo: #ece9f5;
+    --tenue: #a29eb3;
+    --bordo: #2e2b3b;
+    --bordo-forte: #45405a;
+    --accento: #a283ff;
+    --accento-tenue: #2a2342;
+    --su-accento: #140f24;
+    --errore: #ff7a8c;
+    --errore-tenue: #3a1b22;
+    --successo: #6fd99f;
+    --successo-tenue: #183324;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--sfondo);
+}
+
+.scheda {
+  padding: 1.5rem;
+  border: 1px solid var(--bordo);
+  border-radius: calc(var(--raggio) * 1.5);
+  background: var(--superficie);
+}
+
+@media (max-width: 30rem) {
+  .scheda {
+    padding: 1.1rem;
+  }
+}
+
+.tenue {
+  color: var(--tenue);
+}
+
+.testo-errore {
+  color: var(--errore);
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  padding: 0.05em 0.3em;
+  border-radius: 0.3em;
+  background: var(--accento-tenue);
+}
+
+.avviso {
+  padding: 1rem 1.25rem;
+  border-radius: var(--raggio);
+  background: var(--accento-tenue);
+}
+
+.avviso p {
+  margin: 0;
+}
+
+/* Controlli */
+
+button,
+.pulsante {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid transparent;
+  border-radius: calc(var(--raggio) * 0.75);
+  background: var(--accento);
+  color: var(--su-accento);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    filter 0.15s,
+    opacity 0.15s;
+}
+
+button:hover:not(:disabled),
+.pulsante:hover {
+  filter: brightness(1.08);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.secondario {
+  background: var(--superficie);
+  color: var(--testo);
+  border-color: var(--bordo-forte);
+}
+
+button.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accento);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+button.grande {
+  padding: 0.8rem 1.6rem;
+  font-size: 1.05rem;
+}
+
+input[type='number'],
+select,
+textarea {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--bordo-forte);
+  border-radius: calc(var(--raggio) * 0.6);
+  background: var(--superficie);
+  color: inherit;
+  font: inherit;
+  min-width: 0;
+}
+
+input[type='checkbox'],
+input[type='radio'],
+input[type='range'] {
+  accent-color: var(--accento);
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accento);
+  outline-offset: 2px;
+}
+
+/* Etichette di stato */
+
+.etichetta {
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.etichetta.ok {
+  background: var(--successo-tenue);
+  color: var(--successo);
+}
+
+.etichetta.errore {
+  background: var(--errore-tenue);
+  color: var(--errore);
+}
+
+.chip {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--bordo);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}

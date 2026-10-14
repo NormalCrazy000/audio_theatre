@@ -26,7 +26,7 @@ L'ordine segue le dipendenze: prima il formato dei dati, poi la logica (testabil
 3. **Fase 2 – Conversione con skill Claude** (punto 2) ✅
 4. **Fase 3 – Motore di generazione**: personaggio da studiare (5), personaggi inclusi (2), oscuramento (4), pause (3), contesto (6) ✅
 5. **Fase 4 – API FastAPI** ✅
-6. **Fase 5 – Frontend Svelte** (punto 1)
+6. **Fase 5 – Frontend Svelte** (punto 1) ✅
 7. **Fase 6 – Opzionale**: eseguibile ovunque (punto 1), modello locale, TTS offline
 
 ---
@@ -157,7 +157,14 @@ Opzioni:
 - `POST /audio`: riceve copione e opzioni, genera l'mp3 e lo restituisce da scaricare. La generazione può richiedere tempo: si valuta un job asincrono con stato e progresso.
 - In produzione FastAPI serve anche la build statica di Svelte, così c'è un solo processo.
 
-### Fase 5 – Frontend Svelte
+### Fase 5 – Frontend Svelte ✅
+
+> Completata (`frontend/`). Provata end-to-end in Chrome headless sul copione reale: caricamento, scelta di personaggio e scena, generazione, ascolto e download; tema chiaro e scuro, larghezza telefono senza scroll orizzontale, nessun errore in console. Rispetto al piano:
+>
+> - **editor del testo** nel passo "Controlla": gli errori sono cliccabili e portano alla riga, si rianalizza senza ricaricare il file e si può scaricare il copione corretto;
+> - due endpoint in più per le voci: `POST /api/voci/assegna` (precompila i menu) e `POST /api/voci/anteprima` (▶);
+> - le scene in cui il personaggio non parla sono mostrate ma disattivate (il piano le salta comunque);
+> - si ricordano nel browser le opzioni generali e, per ogni copione (per titolo), personaggio, esclusi e voci.
 
 Decisione: le **voci si scelgono qui**, non nell'intestazione del copione. L'assegnazione automatica non conosce il genere dei personaggi, quindi la UI deve rendere facile correggerla.
 

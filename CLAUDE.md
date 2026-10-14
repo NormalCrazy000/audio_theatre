@@ -10,7 +10,7 @@ Strumento per **studiare un copione**: genera un audio in cui il TTS legge le ba
 
 Il progetto è **in refactor**. Il piano, le decisioni prese e l'ordine delle fasi sono in [`REFACTOR.md`](REFACTOR.md). Va letto prima di qualsiasi modifica strutturale e aggiornato quando una decisione cambia o una fase è completata.
 
-Fasi 0–4 completate. Codice attuale in `backend/src/copione_audio/`:
+Fasi 0–5 completate. Codice attuale in `backend/src/copione_audio/`:
 
 - `api/main.py`: FastAPI, `crea_app()`. Endpoint sotto `/api`; l'audio è un job asincrono (`POST /api/audio` → stato → `/mp3`). Il TTS arriva dalla dipendenza `motore_tts`, che nei test si sostituisce con `dependency_overrides`. Se esiste `frontend/dist` (o `$COPIONE_AUDIO_FRONTEND`) viene servito su `/`.
 - `piano.py`: `crea_piano(copione, Opzioni) -> [Parla | Silenzio | Pausa]`, una funzione pura. Toglie le didascalie tra parentesi dal testo letto, salvo `leggi_didascalie`. `Pausa` dipende dalla durata della lettura e viene risolta dal render.
@@ -19,6 +19,13 @@ Fasi 0–4 completate. Codice attuale in `backend/src/copione_audio/`:
 - `copione/`: formato standard del copione (specifica in [`docs/formato-copione.md`](docs/formato-copione.md)). `analizza(testo) -> (Copione, errori)` unisce il parser (sintassi) e il validator (contenuto); gli errori hanno il numero di riga.
 - `conversione/pdf.py`: `estrai_testo(percorso) -> str` con pypdf.
 - `conversione/base.py`: interfaccia `Converter`. Le regole di conversione sono in `conversione/istruzioni.md`, l'unica fonte per la skill `converti-copione` e per il futuro convertitore locale: se cambiano, si aggiornano lì.
+
+Frontend in `frontend/` (Svelte 5 con rune, Vite, TypeScript):
+
+- `src/App.svelte` tiene lo stato e collega i quattro passi `src/lib/Carica|Controlla|Configura|Genera.svelte`;
+- `src/lib/api.ts` contiene tipi e chiamate, allineati ai modelli di `api/main.py`. Se cambia l'API vanno aggiornati;
+- `src/lib/impostazioni.ts` salva le impostazioni nel `localStorage`, con ogni accesso protetto da try/catch;
+- in sviluppo Vite inoltra `/api` a `127.0.0.1:8000`; in produzione FastAPI serve `frontend/dist`.
 
 ## Architettura obiettivo (in breve)
 
@@ -37,6 +44,9 @@ Fasi 0–4 completate. Codice attuale in `backend/src/copione_audio/`:
 cd backend && uv sync && uv run pytest              # dipendenze e test
 uv run --project backend uvicorn copione_audio.api.main:app --reload   # dalla radice; API su :8000, docs su /docs
 uv run --project backend python .claude/skills/converti-copione/valida.py FILE.copione.txt  # controlla un copione
+cd frontend && npm run dev     # UI in sviluppo (serve anche il backend)
+cd frontend && npm run check   # controllo tipi Svelte
+cd frontend && npm run build   # build servita da FastAPI
 ```
 
 Servono FFmpeg installato e una connessione internet (il TTS è online).

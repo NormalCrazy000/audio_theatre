@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -68,6 +68,16 @@ class Analisi(BaseModel):
     battute_per_personaggio: dict[str, int]
     scene: list[ScenaOut]
     errori: list[ErroreOut]
+
+
+class RichiestaAssegnazione(BaseModel):
+    lingua: str
+    personaggi: list[str]
+
+
+class RichiestaAnteprima(BaseModel):
+    voce: Voce
+    testo: str = "Buongiorno, questa è la mia voce."
 
 
 class RichiestaAudio(BaseModel):
@@ -198,6 +208,35 @@ def crea_app(
     async def voci(motore: Motore, lingua: str = "it") -> list[InfoVoce]:
         """Le voci disponibili per una lingua."""
         return await motore.voci(lingua)
+
+    @app.post("/api/voci/assegna")
+    async def assegna(richiesta: RichiestaAssegnazione, motore: Motore) -> dict[str, Voce]:
+        """
+        Assegnazione automatica delle voci (più quella del narratore), da usare
+        come punto di partenza nella UI.
+        """
+        disponibili = await motore.voci(richiesta.lingua)
+        try:
+            return assegna_voci(richiesta.personaggi + [NARRATORE], disponibili)
+        except ValueError as e:
+            raise HTTPException(422, {"messaggio": str(e)})
+
+    @app.post(
+        "/api/voci/anteprima",
+        response_class=Response,
+        responses={200: {"content": {"audio/mpeg": {}}}},
+    )
+    async def anteprima(richiesta: RichiestaAnteprima, motore: Motore) -> Response:
+        """Una frase breve letta con la voce indicata."""
+        testo = richiesta.testo.strip()[:300]
+        if not testo:
+            raise HTTPException(422, {"messaggio": "testo vuoto"})
+        try:
+            audio = await motore.sintetizza(testo, richiesta.voce)
+        except Exception as e:
+            raise HTTPException(502, {"messaggio": f"sintesi non riuscita: {e}"})
+        tipo = "audio/mpeg" if motore.formato == "mp3" else f"audio/{motore.formato}"
+        return Response(audio, media_type=tipo)
 
     @app.post("/api/audio", status_code=202)
     async def genera_audio(
