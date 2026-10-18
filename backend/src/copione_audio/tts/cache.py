@@ -22,7 +22,6 @@ class CacheTTS:
         self.motore = motore
         self.formato = motore.formato
         self.cartella = cartella or cartella_predefinita()
-        self._voci: dict[str, list[InfoVoce]] = {}
 
     def _percorso(self, testo: str, voce: Voce) -> Path:
         chiave = json.dumps(
@@ -44,6 +43,4 @@ class CacheTTS:
         return audio
 
     async def voci(self, lingua: str) -> list[InfoVoce]:
-        if lingua not in self._voci:
-            self._voci[lingua] = await self.motore.voci(lingua)
-        return self._voci[lingua]
+        return await self.motore.voci(lingua)

@@ -1,9 +1,14 @@
 # Copione Audio: frontend Svelte + backend FastAPI in un'unica immagine.
 #
 #   docker build -t copione-audio .
-#   docker run -p 8000:8000 -v copione-audio-cache:/data/cache copione-audio
+#   docker run -p 8000:8000 -v copione-audio-cache:/data/cache \
+#       -v copione-audio-voci:/data/voci copione-audio
 #
-# Poi apri http://localhost:8000. Il TTS (edge-tts) richiede internet.
+# Poi apri http://localhost:8000. Il TTS online (edge-tts) richiede internet;
+# per quello offline (Piper) si scaricano una volta le voci nel volume:
+#
+#   docker run --rm -v copione-audio-voci:/data/voci copione-audio \
+#       python -m copione_audio.tts.piper
 
 # --- 1. Build del frontend -------------------------------------------------
 FROM node:24-slim AS frontend
@@ -32,8 +37,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends ffmpeg \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --uid 1000 app \
-    && mkdir -p /data/cache \
-    && chown app /data/cache
+    && mkdir -p /data/cache /data/voci \
+    && chown app /data/cache /data/voci
 
 COPY --from=backend /app/.venv /app/.venv
 COPY --from=frontend /frontend/dist /app/frontend
@@ -41,12 +46,13 @@ COPY --from=frontend /frontend/dist /app/frontend
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     COPIONE_AUDIO_FRONTEND=/app/frontend \
-    XDG_CACHE_HOME=/data/cache
+    XDG_CACHE_HOME=/data/cache \
+    COPIONE_AUDIO_PIPER=/data/voci
 
 USER app
 WORKDIR /home/app
-# Cache delle battute sintetizzate: con un volume sopravvive ai riavvii.
-VOLUME /data/cache
+# Cache delle battute sintetizzate e voci Piper: con i volumi sopravvivono ai riavvii.
+VOLUME /data/cache /data/voci
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \

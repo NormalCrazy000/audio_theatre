@@ -1,16 +1,17 @@
 <script lang="ts">
   import { onDestroy } from 'svelte'
-  import { avviaAudio, ErroreApi, statoAudio, urlMp3, type Opzioni, type StatoLavoro, type Voce } from './api'
+  import { avviaAudio, ErroreApi, statoAudio, urlMp3, type Motore, type Opzioni, type StatoLavoro, type Voce } from './api'
 
   type Props = {
     testo: string
     opzioni: Opzioni
     voci: Record<string, Voce>
+    motore: Motore
     /** Se presente, la generazione non è possibile e viene mostrato il motivo. */
     blocco: string | null
   }
 
-  let { testo, opzioni, voci, blocco }: Props = $props()
+  let { testo, opzioni, voci, motore, blocco }: Props = $props()
 
   let lavoro = $state<StatoLavoro | null>(null)
   let errore = $state<string | null>(null)
@@ -28,7 +29,7 @@
     errore = null
     lavoro = null
     try {
-      lavoro = await avviaAudio(testo, opzioni, voci)
+      lavoro = await avviaAudio(testo, opzioni, voci, motore)
       controlla()
     } catch (e) {
       errore = e instanceof ErroreApi || e instanceof Error ? e.message : String(e)

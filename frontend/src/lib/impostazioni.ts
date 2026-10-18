@@ -1,7 +1,7 @@
 // Impostazioni ricordate nel browser (localStorage). Ogni accesso è protetto:
 // in navigazione privata o con lo storage bloccato l'app funziona lo stesso.
 
-import type { Opzioni, Voce } from './api'
+import type { Motore, Opzioni, Voce } from './api'
 
 /** Le opzioni che valgono per qualsiasi copione. */
 export type OpzioniGenerali = Omit<Opzioni, 'personaggio' | 'personaggi_inclusi' | 'scene'>
@@ -10,6 +10,9 @@ export type OpzioniGenerali = Omit<Opzioni, 'personaggio' | 'personaggi_inclusi'
 export type SceltePerCopione = {
   personaggio?: string
   esclusi?: string[]
+  /** Le voci di ogni motore: i nomi delle voci cambiano da un motore all'altro. */
+  vociPerMotore?: Partial<Record<Motore, Record<string, Voce>>>
+  /** Formato precedente: voci di edge-tts. */
   voci?: Record<string, Voce>
 }
 
@@ -25,6 +28,7 @@ export const OPZIONI_PREDEFINITE: OpzioniGenerali = {
 }
 
 const CHIAVE_OPZIONI = 'copione-audio:opzioni'
+const CHIAVE_MOTORE = 'copione-audio:motore'
 const chiaveCopione = (titolo: string) => `copione-audio:copione:${titolo}`
 
 function leggi<T>(chiave: string): T | null {
@@ -51,8 +55,14 @@ export const leggiOpzioni = (): OpzioniGenerali => ({
 
 export const salvaOpzioni = (opzioni: OpzioniGenerali) => scrivi(CHIAVE_OPZIONI, opzioni)
 
-export const leggiScelte = (titolo: string): SceltePerCopione =>
-  leggi<SceltePerCopione>(chiaveCopione(titolo)) ?? {}
+export const leggiMotore = (): Motore => (leggi<Motore>(CHIAVE_MOTORE) === 'piper' ? 'piper' : 'edge')
+
+export const salvaMotore = (motore: Motore) => scrivi(CHIAVE_MOTORE, motore)
+
+export function leggiScelte(titolo: string): SceltePerCopione {
+  const { voci, ...scelte } = leggi<SceltePerCopione>(chiaveCopione(titolo)) ?? {}
+  return voci && !scelte.vociPerMotore ? { ...scelte, vociPerMotore: { edge: voci } } : scelte
+}
 
 export const salvaScelte = (titolo: string, scelte: SceltePerCopione) =>
   scrivi(chiaveCopione(titolo), scelte)

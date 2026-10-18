@@ -5,7 +5,8 @@ import pytest
 from fastapi.testclient import TestClient
 from pypdf import PdfWriter
 
-from copione_audio.api.main import crea_app, motore_tts
+from copione_audio.api.main import crea_app, motori_tts
+from copione_audio.tts.piper import PiperTTS
 
 COPIONE = """\
 ---
@@ -24,7 +25,7 @@ B: Solo io.
 @pytest.fixture
 def client(tmp_path, finto_tts):
     app = crea_app(cartella_lavori=tmp_path, frontend=tmp_path / "assente")
-    app.dependency_overrides[motore_tts] = lambda: finto_tts
+    app.dependency_overrides[motori_tts] = lambda: {"edge": finto_tts, "piper": finto_tts}
     with TestClient(app) as client:
         yield client
 
@@ -158,3 +159,35 @@ def test_anteprima(client, finto_tts):
     assert risposta.status_code == 200
     assert risposta.headers["content-type"] == "audio/wav"
     assert finto_tts.richieste[0][1].tono == "+12Hz"
+
+
+def test_motore_scelto_nella_richiesta(tmp_path, finto_tts):
+    from conftest import FintoTTS
+
+    offline = FintoTTS()
+    app = crea_app(cartella_lavori=tmp_path, frontend=tmp_path / "assente")
+    app.dependency_overrides[motori_tts] = lambda: {"edge": finto_tts, "piper": offline}
+    with TestClient(app) as client:
+        risposta = client.post(
+            "/api/voci/anteprima", json={"voce": {"nome": "x"}, "motore": "piper"}
+        )
+        assert risposta.status_code == 200
+        assert len(offline.richieste) == 1 and not finto_tts.richieste
+        assert client.get("/api/voci", params={"motore": "altro"}).status_code == 422
+
+
+def test_piper_senza_voci_spiega_come_scaricarle(tmp_path, finto_tts):
+    app = crea_app(cartella_lavori=tmp_path, frontend=tmp_path / "assente")
+    app.dependency_overrides[motori_tts] = lambda: {
+        "edge": finto_tts,
+        "piper": PiperTTS(tmp_path / "voci"),
+    }
+    with TestClient(app) as client:
+        risposta = client.get("/api/voci", params={"lingua": "it", "motore": "piper"})
+        assert risposta.status_code == 422
+        assert "copione_audio.tts.piper" in risposta.json()["detail"]["messaggio"]
+        risposta = client.post(
+            "/api/audio",
+            json={"testo": COPIONE, "opzioni": {"personaggio": "A"}, "motore": "piper"},
+        )
+        assert risposta.status_code == 422

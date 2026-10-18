@@ -10,10 +10,14 @@ Serve solo Docker. Dalla radice del progetto:
 
 ```bash
 docker build -t copione-audio .
-docker run -p 8000:8000 -v copione-audio-cache:/data/cache copione-audio
+docker run -p 8000:8000 -v copione-audio-cache:/data/cache -v copione-audio-voci:/data/voci copione-audio
 ```
 
-Apri <http://localhost:8000>. Il volume `copione-audio-cache` conserva le battute già sintetizzate tra un avvio e l'altro. Il TTS richiede comunque internet.
+Apri <http://localhost:8000>. Il volume `copione-audio-cache` conserva le battute già sintetizzate tra un avvio e l'altro. La sintesi online richiede internet; per usare quella offline scarica una volta le voci nel volume `copione-audio-voci`:
+
+```bash
+docker run --rm -v copione-audio-voci:/data/voci copione-audio python -m copione_audio.tts.piper
+```
 
 ## Senza Docker
 
@@ -26,7 +30,7 @@ Apri <http://localhost:8000>. Il volume `copione-audio-cache` conserva le battut
   - Ubuntu/Debian: `sudo apt install ffmpeg`
   - macOS: `brew install ffmpeg`
   - Windows: scaricalo e aggiungilo al PATH
-- **Connessione internet**: la sintesi vocale usa edge-tts (voci neurali Microsoft)
+- **Connessione internet** per la sintesi online, edge-tts (voci neurali Microsoft). In alternativa c'è quella offline, vedi sotto
 
 ### Installazione
 
@@ -34,6 +38,25 @@ Apri <http://localhost:8000>. Il volume `copione-audio-cache` conserva le battut
 cd backend && uv sync && cd ..
 cd frontend && npm install && npm run build && cd ..
 ```
+
+### Sintesi offline (facoltativa)
+
+Nel passo **Configura** si sceglie tra due motori:
+
+| | Online (edge-tts) | Offline (Piper) |
+| :--- | :--- | :--- |
+| Qualità | Voci neurali Microsoft, più naturali | Più semplici e meno espressive |
+| Voci italiane | 4 (2 maschili, 2 femminili) | 3 (paola, serena, riccardo; solo riccardo è maschile ed è la meno curata) |
+| Internet | Sempre | Solo per scaricare le voci, una volta |
+| Il testo del copione | Viene inviato a Microsoft | Resta sul computer |
+
+Per usare Piper scarica le voci italiane (circa 150 MB) in `~/.local/share/copione-audio/piper`, oppure nella cartella indicata da `$COPIONE_AUDIO_PIPER`:
+
+```bash
+uv run --project backend python -m copione_audio.tts.piper
+```
+
+Le voci si possono anche scegliere a mano, per esempio `… -m copione_audio.tts.piper it_IT-serena-high` ([elenco delle voci](https://huggingface.co/rhasspy/piper-voices)). Piper non ha toni diversi: il tono viene spostato dopo la sintesi.
 
 ## Come si usa
 
@@ -56,10 +79,10 @@ Apri <http://127.0.0.1:8000>. La pagina guida in quattro passi:
 
 1. **Carica** il `.copione.txt`.
 2. **Controlla** gli errori; puoi correggerli nell'editor integrato e scaricare il copione corretto.
-3. **Configura**: personaggio, battuta muta o letta, battute precedenti o scena intera, pause, personaggi da ascoltare, scene e voci (con anteprima ▶).
+3. **Configura**: personaggio, battuta muta o letta, battute precedenti o scena intera, pause, sintesi online o offline, personaggi da ascoltare, scene e voci (con anteprima ▶).
 4. **Genera**: barra di avanzamento, poi ascolto e download dell'mp3.
 
-Le impostazioni vengono ricordate nel browser; personaggio e voci per ogni copione.
+Le impostazioni vengono ricordate nel browser; personaggio e voci per ogni copione (le voci separatamente per ciascun motore).
 
 ### Sviluppo dell'interfaccia
 
@@ -80,10 +103,10 @@ La documentazione interattiva è su <http://127.0.0.1:8000/docs>.
 | :--- | :--- |
 | `POST /api/copioni/analizza` | `{"testo": …}`: personaggi, scene, battute ed errori |
 | `POST /api/copioni/pdf` | Upload di un PDF: testo grezzo |
-| `GET /api/voci?lingua=it` | Voci disponibili |
-| `POST /api/voci/assegna` | `{"lingua", "personaggi"}`: assegnazione automatica delle voci |
-| `POST /api/voci/anteprima` | `{"voce", "testo"}`: mp3 di prova di una voce |
-| `POST /api/audio` | `{"testo", "opzioni", "voci"}`: avvia la generazione e restituisce un `id` |
+| `GET /api/voci?lingua=it&motore=edge` | Voci disponibili (`motore`: `edge` o `piper`; per Piper quelle installate) |
+| `POST /api/voci/assegna` | `{"lingua", "personaggi", "motore"}`: assegnazione automatica delle voci |
+| `POST /api/voci/anteprima` | `{"voce", "testo", "motore"}`: mp3 di prova di una voce |
+| `POST /api/audio` | `{"testo", "opzioni", "voci", "motore"}`: avvia la generazione e restituisce un `id` |
 | `GET /api/audio/{id}` | Stato e progresso |
 | `GET /api/audio/{id}/mp3` | Scarica l'mp3 |
 
@@ -105,7 +128,7 @@ I test non usano la rete: il TTS viene sostituito da un finto sintetizzatore.
   - `copione/`: modello, parser e validator del formato standard del copione
   - `piano.py`: dal copione e dalle opzioni calcola la sequenza di segmenti (funzione pura)
   - `render.py`: dai segmenti produce l'audio
-  - `tts/`: interfaccia `TTSEngine`, edge-tts, cache su disco e assegnazione delle voci
+  - `tts/`: interfaccia `TTSEngine`, edge-tts (online), Piper (offline), cache su disco e assegnazione delle voci
   - `conversione/`: estrazione del testo dai PDF, interfaccia `Converter` e regole di conversione (`istruzioni.md`)
 - `backend/tests/`: test (pytest)
 - `frontend/`: interfaccia Svelte 5 + Vite (`src/App.svelte` e i passi in `src/lib/`)

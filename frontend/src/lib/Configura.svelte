@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { anteprima, NARRATORE, type Analisi, type InfoVoce, type Voce } from './api'
+  import { anteprima, NARRATORE, type Analisi, type InfoVoce, type Motore, type Voce } from './api'
   import type { OpzioniGenerali } from './impostazioni'
 
   type Props = {
@@ -12,6 +12,10 @@
     generali: OpzioniGenerali
     voci: Record<string, Voce>
     elencoVoci: InfoVoce[]
+    motore: Motore
+    caricamentoVoci: boolean
+    erroreVoci: string | null
+    oncambiamotore: (motore: Motore) => void
   }
 
   let {
@@ -22,6 +26,10 @@
     generali = $bindable(),
     voci = $bindable(),
     elencoVoci,
+    motore,
+    caricamentoVoci,
+    erroreVoci,
+    oncambiamotore,
   }: Props = $props()
 
   const TONI = ['-24Hz', '-12Hz', '+0Hz', '+12Hz', '+24Hz']
@@ -39,6 +47,16 @@
   let ultimoContesto = $state(3)
   let inAscolto = $state<string | null>(null)
   let erroreAnteprima = $state<string | null>(null)
+
+  /** "it-IT-ElsaNeural" → "Elsa"; "it_IT-paola-medium" → "paola, medium". */
+  function nomeVoce(v: InfoVoce): string {
+    const nome = v.nome
+      .replace(/^[a-z]{2,3}[-_][A-Z]{2}-/, '')
+      .replace(/Neural$/, '')
+      .replace(/-([a-z_]+)$/, ', $1')
+    const genere = { Male: 'M', Female: 'F' }[v.genere]
+    return genere ? `${nome} (${genere})` : nome
+  }
 
   function cambiaContesto(scenaIntera: boolean) {
     if (scenaIntera) {
@@ -62,7 +80,7 @@
     erroreAnteprima = null
     try {
       const frase = nome === NARRATORE ? 'Entra Giulia, molto agitata.' : `Buongiorno, sono ${nome}.`
-      const url = await anteprima(voci[nome], frase)
+      const url = await anteprima(voci[nome], frase, motore)
       const audio = new Audio(url)
       audio.onended = () => URL.revokeObjectURL(url)
       await audio.play()
@@ -129,6 +147,35 @@
       />
       <span>la scena intera, una volta sola</span>
     </label>
+  </fieldset>
+
+  <fieldset class="campo">
+    <legend>Sintesi vocale</legend>
+    <label class="scelta">
+      <input
+        type="radio"
+        name="motore"
+        checked={motore === 'edge'}
+        disabled={caricamentoVoci}
+        onchange={() => oncambiamotore('edge')}
+      />
+      <span><strong>Online</strong> — voci Microsoft, più naturali</span>
+    </label>
+    <label class="scelta">
+      <input
+        type="radio"
+        name="motore"
+        checked={motore === 'piper'}
+        disabled={caricamentoVoci}
+        onchange={() => oncambiamotore('piper')}
+      />
+      <span><strong>Offline</strong> — Piper, senza internet</span>
+    </label>
+    {#if caricamentoVoci}
+      <p class="tenue nota">Caricamento delle voci…</p>
+    {:else if erroreVoci}
+      <p class="testo-errore nota" role="alert">{erroreVoci}</p>
+    {/if}
   </fieldset>
 
   <fieldset class="campo">
@@ -215,7 +262,7 @@
         <select bind:value={voci[nome].nome} aria-label="Voce di {nome}">
           {#each elencoVoci as v (v.nome)}
             <option value={v.nome}>
-              {v.nome.replace(/^[a-z]{2}-[A-Z]{2}-/, '').replace(/Neural$/, '')} ({v.genere === 'Male' ? 'M' : 'F'})
+              {nomeVoce(v)}
             </option>
           {/each}
         </select>
@@ -302,6 +349,11 @@
 
   .numero {
     width: 4.5rem;
+  }
+
+  .nota {
+    margin: 0.2rem 0 0;
+    overflow-wrap: anywhere;
   }
 
   details {

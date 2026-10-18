@@ -27,18 +27,23 @@ from copione_audio.render import render
 from copione_audio.tts import InfoVoce, TTSEngine, Voce, assegna_voci
 from copione_audio.tts.cache import CacheTTS
 from copione_audio.tts.edge import EdgeTTS
+from copione_audio.tts.piper import PiperTTS
 
 # main.py → api → copione_audio → src → backend → radice del progetto
 FRONTEND_PREDEFINITO = Path(__file__).parents[4] / "frontend" / "dist"
 
 
+NomeMotore = Literal["edge", "piper"]
+"""`edge`: voci Microsoft online; `piper`: voci locali, senza internet."""
+
+
 @cache
-def motore_tts() -> TTSEngine:
-    """Il motore TTS dell'app (sostituibile nei test con `dependency_overrides`)."""
-    return CacheTTS(EdgeTTS())
+def motori_tts() -> dict[str, TTSEngine]:
+    """I motori TTS dell'app (sostituibili nei test con `dependency_overrides`)."""
+    return {"edge": CacheTTS(EdgeTTS()), "piper": CacheTTS(PiperTTS())}
 
 
-Motore = Annotated[TTSEngine, Depends(motore_tts)]
+Motori = Annotated[dict[str, TTSEngine], Depends(motori_tts)]
 
 
 # --- Modelli di richiesta e risposta ---
@@ -73,16 +78,19 @@ class Analisi(BaseModel):
 class RichiestaAssegnazione(BaseModel):
     lingua: str
     personaggi: list[str]
+    motore: NomeMotore = "edge"
 
 
 class RichiestaAnteprima(BaseModel):
     voce: Voce
     testo: str = "Buongiorno, questa è la mia voce."
+    motore: NomeMotore = "edge"
 
 
 class RichiestaAudio(BaseModel):
     testo: str
     opzioni: Opzioni
+    motore: NomeMotore = "edge"
     voci: dict[str, Voce] = {}
     """Voci scelte; i personaggi mancanti ricevono una voce automatica."""
 
@@ -145,6 +153,28 @@ def _analisi(copione: Copione, errori: list[Errore]) -> Analisi:
     )
 
 
+COMANDO_VOCI_PIPER = "uv run --project backend python -m copione_audio.tts.piper"
+
+
+async def _disponibili(motori: dict[str, TTSEngine], motore: str, lingua: str) -> list[InfoVoce]:
+    """
+    Le voci del motore per la lingua.
+
+    :raises HTTPException: 502 se il motore non risponde (es. edge-tts senza
+        internet), 422 se non ci sono voci (es. Piper senza voci installate).
+    """
+    try:
+        voci = await motori[motore].voci(lingua)
+    except Exception as e:
+        raise HTTPException(502, {"messaggio": f"elenco delle voci non disponibile: {e}"})
+    if not voci:
+        messaggio = f"nessuna voce per la lingua \"{lingua}\""
+        if motore == "piper":
+            messaggio += f"; per scaricare le voci offline: {COMANDO_VOCI_PIPER}"
+        raise HTTPException(422, {"messaggio": messaggio})
+    return voci
+
+
 def _nome_file(titolo: str, personaggio: str) -> str:
     """Nome dell'mp3 da scaricare, es. "Così non vale.LAURA.mp3"."""
     base = " ".join(re.sub(r'[\\/:*?"<>|]', " ", titolo).split()) or "copione"
@@ -205,29 +235,29 @@ def crea_app(
             raise HTTPException(422, f"PDF non leggibile: {e}")
 
     @app.get("/api/voci")
-    async def voci(motore: Motore, lingua: str = "it") -> list[InfoVoce]:
-        """Le voci disponibili per una lingua."""
-        return await motore.voci(lingua)
+    async def voci(
+        motori: Motori, lingua: str = "it", motore: NomeMotore = "edge"
+    ) -> list[InfoVoce]:
+        """Le voci disponibili per una lingua; per Piper, quelle installate."""
+        return await _disponibili(motori, motore, lingua)
 
     @app.post("/api/voci/assegna")
-    async def assegna(richiesta: RichiestaAssegnazione, motore: Motore) -> dict[str, Voce]:
+    async def assegna(richiesta: RichiestaAssegnazione, motori: Motori) -> dict[str, Voce]:
         """
         Assegnazione automatica delle voci (più quella del narratore), da usare
         come punto di partenza nella UI.
         """
-        disponibili = await motore.voci(richiesta.lingua)
-        try:
-            return assegna_voci(richiesta.personaggi + [NARRATORE], disponibili)
-        except ValueError as e:
-            raise HTTPException(422, {"messaggio": str(e)})
+        disponibili = await _disponibili(motori, richiesta.motore, richiesta.lingua)
+        return assegna_voci(richiesta.personaggi + [NARRATORE], disponibili)
 
     @app.post(
         "/api/voci/anteprima",
         response_class=Response,
         responses={200: {"content": {"audio/mpeg": {}}}},
     )
-    async def anteprima(richiesta: RichiestaAnteprima, motore: Motore) -> Response:
+    async def anteprima(richiesta: RichiestaAnteprima, motori: Motori) -> Response:
         """Una frase breve letta con la voce indicata."""
+        motore = motori[richiesta.motore]
         testo = richiesta.testo.strip()[:300]
         if not testo:
             raise HTTPException(422, {"messaggio": "testo vuoto"})
@@ -240,12 +270,13 @@ def crea_app(
 
     @app.post("/api/audio", status_code=202)
     async def genera_audio(
-        richiesta: RichiestaAudio, motore: Motore, request: Request
+        richiesta: RichiestaAudio, motori: Motori, request: Request
     ) -> StatoLavoro:
         """
         Avvia la generazione dell'mp3. I problemi del copione e delle opzioni
         vengono segnalati subito (422); la sintesi prosegue in background.
         """
+        motore = motori[richiesta.motore]
         copione, errori = analizza(richiesta.testo)
         if errori:
             raise HTTPException(
@@ -257,14 +288,14 @@ def crea_app(
             )
         try:
             segmenti = crea_piano(copione, richiesta.opzioni)
-            disponibili = await motore.voci(copione.lingua)
-            voci = assegna_voci(copione.personaggi + [NARRATORE], disponibili)
         except ValueError as e:
             raise HTTPException(422, {"messaggio": str(e)})
         if not segmenti:
             raise HTTPException(
                 422, {"messaggio": "nessuna battuta da studiare con queste opzioni"}
             )
+        disponibili = await _disponibili(motori, richiesta.motore, copione.lingua)
+        voci = assegna_voci(copione.personaggi + [NARRATORE], disponibili)
 
         lavoro = Lavoro(
             id=uuid.uuid4().hex,

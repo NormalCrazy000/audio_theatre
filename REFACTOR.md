@@ -191,7 +191,13 @@ Le impostazioni si ricordano nel browser.
 - **Eseguibile ovunque**: un `Dockerfile` unico ✅ (multi-stage: Node per il frontend, uv per il backend, `python:3.14-slim` con ffmpeg; cache TTS nel volume `/data/cache`). Nessun deploy online: l'app resta in locale.
 - **Modello locale**: `OllamaConverter` integrato nell'upload del PDF.
 - **Più personaggi studiati insieme** (es. due ruoli piccoli): `personaggio` diventa un elenco.
-- **TTS offline**: un motore Piper dietro `TTSEngine`.
+- **TTS offline** ✅: `PiperTTS` dietro `TTSEngine`, scelto dall'interfaccia (Online/Offline) e passato all'API nel campo `motore`. Note:
+  - voci italiane disponibili: paola e serena (femminili), riccardo (maschile, qualità `x_low`); `python -m copione_audio.tts.piper` scarica le tre consigliate (circa 150 MB) in `~/.local/share/copione-audio/piper` o `$COPIONE_AUDIO_PIPER`;
+  - Piper non ha toni: il tono (in Hz, come per edge-tts) viene spostato dopo la sintesi con ffmpeg, rispetto a una voce media di 200 Hz; la velocità diventa `length_scale`;
+  - l'audio viene salvato in mp3 a 64 kbit/s, così la cache resta piccola;
+  - i modelli non dichiarano il genere: è scritto in `GENERI` per le voci note;
+  - le voci scelte nel browser sono ricordate per motore; l'elenco delle voci Piper si rilegge ogni volta, quindi una voce appena scaricata compare senza riavviare;
+  - collaudo: LAURA, scena 4 di *Così non vale*, 5,3 minuti di audio in 5 s (circa 20 s con edge-tts).
 - **Player interattivo** nel browser.
 
 ---

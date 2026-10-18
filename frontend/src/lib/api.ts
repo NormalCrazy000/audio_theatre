@@ -20,6 +20,9 @@ export type Analisi = {
 
 export type Voce = { nome: string; tono: string; velocita: string }
 
+/** `edge`: voci Microsoft online; `piper`: voci locali, senza internet. */
+export type Motore = 'edge' | 'piper'
+
 export type InfoVoce = { nome: string; genere: string; lingua: string }
 
 /** Le opzioni del piano audio (dataclass `Opzioni` in piano.py). */
@@ -97,24 +100,28 @@ async function json<T>(percorso: string, corpo?: unknown): Promise<T> {
 
 export const analizza = (testo: string) => json<Analisi>('/api/copioni/analizza', { testo })
 
-export const voci = (lingua: string) =>
-  json<InfoVoce[]>(`/api/voci?lingua=${encodeURIComponent(lingua)}`)
+export const voci = (lingua: string, motore: Motore) =>
+  json<InfoVoce[]>(`/api/voci?${new URLSearchParams({ lingua, motore })}`)
 
-export const assegnaVoci = (lingua: string, personaggi: string[]) =>
-  json<Record<string, Voce>>('/api/voci/assegna', { lingua, personaggi })
+export const assegnaVoci = (lingua: string, personaggi: string[], motore: Motore) =>
+  json<Record<string, Voce>>('/api/voci/assegna', { lingua, personaggi, motore })
 
 /** L'audio di anteprima di una voce, come URL da riprodurre. */
-export async function anteprima(voce: Voce, testo: string): Promise<string> {
+export async function anteprima(voce: Voce, testo: string, motore: Motore): Promise<string> {
   const risposta = await chiama('/api/voci/anteprima', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ voce, testo }),
+    body: JSON.stringify({ voce, testo, motore }),
   })
   return URL.createObjectURL(await risposta.blob())
 }
 
-export const avviaAudio = (testo: string, opzioni: Opzioni, voci: Record<string, Voce>) =>
-  json<StatoLavoro>('/api/audio', { testo, opzioni, voci })
+export const avviaAudio = (
+  testo: string,
+  opzioni: Opzioni,
+  voci: Record<string, Voce>,
+  motore: Motore,
+) => json<StatoLavoro>('/api/audio', { testo, opzioni, voci, motore })
 
 export const statoAudio = (id: string) => json<StatoLavoro>(`/api/audio/${id}`)
 

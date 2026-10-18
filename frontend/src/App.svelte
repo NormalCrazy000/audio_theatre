@@ -1,11 +1,19 @@
 <script lang="ts">
   import * as api from './lib/api'
-  import type { Analisi, InfoVoce, Opzioni, Voce } from './lib/api'
+  import type { Analisi, InfoVoce, Motore, Opzioni, Voce } from './lib/api'
   import Carica from './lib/Carica.svelte'
   import Configura from './lib/Configura.svelte'
   import Controlla from './lib/Controlla.svelte'
   import Genera from './lib/Genera.svelte'
-  import { leggiOpzioni, leggiScelte, salvaOpzioni, salvaScelte } from './lib/impostazioni'
+  import {
+    leggiMotore,
+    leggiOpzioni,
+    leggiScelte,
+    salvaMotore,
+    salvaOpzioni,
+    salvaScelte,
+    type SceltePerCopione,
+  } from './lib/impostazioni'
 
   let testo = $state('')
   let nomeFile = $state('')
@@ -19,6 +27,14 @@
   let scene = $state<number[]>([])
   let voci = $state<Record<string, Voce>>({})
   let elencoVoci = $state<InfoVoce[]>([])
+  let motore = $state<Motore>(leggiMotore())
+  let caricamentoVoci = $state(false)
+  let erroreVoci = $state<string | null>(null)
+
+  // Le voci scelte per ogni motore, per ritrovarle cambiando motore.
+  let vociPerMotore: NonNullable<SceltePerCopione['vociPerMotore']> = {}
+  // Solo l'ultima richiesta di voci conta, se si cambia motore più volte.
+  let richiestaVoci = 0
 
   // Il copione (titolo) per cui sono state preparate le scelte: rianalizzare
   // lo stesso copione dopo una correzione non le azzera.
@@ -51,9 +67,12 @@
 
   // Le impostazioni si ricordano nel browser.
   $effect(() => salvaOpzioni($state.snapshot(generali)))
+  $effect(() => salvaMotore(motore))
   $effect(() => {
-    if (analisi && personaggio)
-      salvaScelte(analisi.titolo, $state.snapshot({ personaggio, esclusi, voci }))
+    if (!analisi || !personaggio) return
+    if (Object.keys(voci).length > 0)
+      vociPerMotore = { ...vociPerMotore, [motore]: $state.snapshot(voci) }
+    salvaScelte(analisi.titolo, { personaggio, esclusi: $state.snapshot(esclusi), vociPerMotore })
   })
 
   async function carica(contenuto: string, nome: string) {
@@ -63,13 +82,22 @@
     await analizzaTesto()
   }
 
+  // Dopo l'ultima `await` lo stato cambia tutto insieme: gli effetti che
+  // salvano le scelte non vedono mai un copione nuovo con le voci del vecchio.
   async function analizzaTesto() {
     inAnalisi = true
     errore = null
     try {
       const risultato = await api.analizza(testo)
-      if (risultato.titolo !== titoloPreparato) await prepara(risultato)
-      else scene = scene.filter((i) => i < risultato.scene.length)
+      if (risultato.titolo !== titoloPreparato) {
+        const salvate = leggiScelte(risultato.titolo)
+        richiestaVoci++ // annulla un eventuale cambio di motore in corso
+        const caricate = await vociDelMotore(risultato, motore, salvate.vociPerMotore ?? {})
+        prepara(risultato, salvate)
+        applicaVoci(motore, caricate)
+      } else {
+        scene = scene.filter((i) => i < risultato.scene.length)
+      }
       analisi = risultato
     } catch (e) {
       errore = e instanceof Error ? e.message : String(e)
@@ -78,9 +106,8 @@
     }
   }
 
-  /** Imposta personaggio, scene e voci per un copione appena caricato. */
-  async function prepara(nuova: Analisi) {
-    const salvate = leggiScelte(nuova.titolo)
+  /** Imposta personaggio e scene per un copione appena caricato. */
+  function prepara(nuova: Analisi, salvate: SceltePerCopione) {
     const nomi = nuova.personaggi
     // Di default il personaggio salvato, altrimenti quello con più battute.
     personaggio =
@@ -89,25 +116,51 @@
         : [...nomi].sort((a, b) => nuova.battute_per_personaggio[b] - nuova.battute_per_personaggio[a])[0] ?? ''
     esclusi = (salvate.esclusi ?? []).filter((n) => nomi.includes(n))
     scene = nuova.scene.map((s) => s.indice)
+    vociPerMotore = salvate.vociPerMotore ?? {}
     titoloPreparato = nuova.titolo
+  }
 
-    if (!nuova.lingua || nomi.length === 0) return
+  type VociCaricate = { elenco: InfoVoce[]; voci: Record<string, Voce>; errore: string | null }
+
+  /** Le voci del motore e la loro assegnazione, con le scelte salvate ancora valide. */
+  async function vociDelMotore(
+    copione: Analisi,
+    m: Motore,
+    salvate: NonNullable<SceltePerCopione['vociPerMotore']>,
+  ): Promise<VociCaricate> {
+    if (!copione.lingua || copione.personaggi.length === 0)
+      return { elenco: [], voci: {}, errore: null }
     try {
       const [elenco, assegnate] = await Promise.all([
-        api.voci(nuova.lingua),
-        api.assegnaVoci(nuova.lingua, nomi),
+        api.voci(copione.lingua, m),
+        api.assegnaVoci(copione.lingua, copione.personaggi, m),
       ])
       const disponibili = new Set(elenco.map((v) => v.nome))
-      const valide = Object.entries(salvate.voci ?? {}).filter(
+      const valide = Object.entries(salvate[m] ?? {}).filter(
         ([nome, voce]) => nome in assegnate && disponibili.has(voce.nome),
       )
-      elencoVoci = elenco
-      voci = { ...assegnate, ...Object.fromEntries(valide) }
+      return { elenco, voci: { ...assegnate, ...Object.fromEntries(valide) }, errore: null }
     } catch (e) {
-      elencoVoci = []
-      voci = {}
-      errore = `Voci non disponibili: ${e instanceof Error ? e.message : e}`
+      const messaggio = e instanceof Error ? e.message : String(e)
+      return { elenco: [], voci: {}, errore: `Voci non disponibili: ${messaggio}` }
     }
+  }
+
+  function applicaVoci(m: Motore, caricate: VociCaricate) {
+    motore = m
+    elencoVoci = caricate.elenco
+    voci = caricate.voci
+    erroreVoci = caricate.errore
+    caricamentoVoci = false
+  }
+
+  async function cambiaMotore(nuovo: Motore) {
+    if (!analisi) return
+    const richiesta = ++richiestaVoci
+    caricamentoVoci = true
+    const caricate = await vociDelMotore(analisi, nuovo, vociPerMotore)
+    if (richiesta !== richiestaVoci) return
+    applicaVoci(nuovo, caricate)
   }
 </script>
 
@@ -146,12 +199,16 @@
         bind:generali
         bind:voci
         {elencoVoci}
+        {motore}
+        {caricamentoVoci}
+        {erroreVoci}
+        oncambiamotore={cambiaMotore}
       />
     </section>
 
     <section class="scheda">
       <h2><span class="numero-passo">4</span> Genera</h2>
-      <Genera {testo} {opzioni} {voci} {blocco} />
+      <Genera {testo} {opzioni} {voci} {motore} {blocco} />
     </section>
   {/if}
 </main>
