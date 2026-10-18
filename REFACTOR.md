@@ -190,7 +190,7 @@ Le impostazioni si ricordano nel browser.
 
 ### Fase 6 – Opzionale
 
-- **Eseguibile ovunque**: un `Dockerfile` unico ✅ (multi-stage: Node per il frontend, uv per il backend, `python:3.14-slim` con ffmpeg; cache TTS nel volume `/data/cache`). Nessun deploy online: l'app resta in locale.
+- **Eseguibile ovunque**: un `Dockerfile` unico ✅ (multi-stage: Node per il frontend, uv per il backend, `python:3.14-slim` con ffmpeg; cache TTS nel volume `/data/cache`). Si avvia con `docker compose up --build` (`compose.yaml`): porta solo su `127.0.0.1`, cartelle `cache/` e `voci/` del progetto collegate al container. Nessun deploy online: l'app resta in locale.
 - **Modello locale**: `OllamaConverter` integrato nell'upload del PDF. In sospeso: piano, domande aperte e prerequisito della GPU in [`docs/modello-locale.md`](docs/modello-locale.md).
 - **TTS offline** ✅: `PiperTTS` dietro `TTSEngine`, scelto dall'interfaccia (Online/Offline) e passato all'API nel campo `motore`. Note:
   - voci italiane disponibili: paola e serena (femminili), riccardo (maschile, qualità `x_low`); stanno in `voci/` nella radice del progetto (esclusa da git) o in `$COPIONE_AUDIO_PIPER`;

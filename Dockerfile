@@ -1,12 +1,13 @@
 # Copione Audio: frontend Svelte + backend FastAPI in un'unica immagine.
 #
-#   docker build -t copione-audio .
-#   docker run -p 8000:8000 -v copione-audio-cache:/data/cache \
-#       -v copione-audio-voci:/data/voci copione-audio
+# Si avvia con Docker Compose (vedi compose.yaml):
+#
+#   docker compose up --build
 #
 # Poi apri http://localhost:8000. Il TTS online (edge-tts) richiede internet;
 # per quello offline (Piper) le voci si scaricano a mano e si aggiungono da
-# «Gestisci voci offline» nell'interfaccia: finiscono nel volume /data/voci.
+# «Gestisci voci offline» nell'interfaccia: finiscono in /data/voci, che
+# compose.yaml collega alla cartella voci/ del progetto.
 
 # --- 1. Build del frontend -------------------------------------------------
 FROM node:24-slim AS frontend

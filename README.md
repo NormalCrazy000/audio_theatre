@@ -44,18 +44,29 @@ La scelta tra voci online e offline, e tutte le altre impostazioni, si fanno poi
 Se hai Docker non servono uv, Node.js né FFmpeg. Dalla cartella del progetto:
 
 ```bash
-docker build -t copione-audio .        # la prima volta e dopo ogni aggiornamento del codice
-docker run -p 8000:8000 -v copione-audio-cache:/data/cache -v copione-audio-voci:/data/voci copione-audio
+docker compose up --build
 ```
 
-Poi apri <http://localhost:8000>. I due volumi conservano tra un avvio e l'altro le battute già sintetizzate e le voci offline aggiunte dall'interfaccia. Se Docker risponde `permission denied`, usa `sudo docker …` oppure aggiungi il tuo utente al gruppo `docker` (`sudo usermod -aG docker $USER`, poi esci e rientra).
+Quando compare `Uvicorn running on http://0.0.0.0:8000`, apri **<http://localhost:8000>**. `--build` costruisce l'immagine la prima volta e la ricostruisce se il codice è cambiato (altrimenti è quasi immediato).
+
+| Per… | Comando |
+| :--- | :--- |
+| Fermare l'app | `Ctrl+C`, oppure `docker compose down` da un altro terminale |
+| Avviarla in background | `docker compose up --build -d` (poi `docker compose logs -f` per i messaggi, `docker compose down` per fermarla) |
+
+Tutte le impostazioni stanno in [`compose.yaml`](compose.yaml):
+
+- la porta `8000`, raggiungibile solo da questo computer;
+- le cartelle `cache/` e `voci/` del progetto, condivise con il container: battute già sintetizzate e voci offline sono le stesse dell'app avviata senza Docker, e restano tra un avvio e l'altro.
+
+Se Docker risponde `permission denied`, usa `sudo docker compose …` oppure aggiungi il tuo utente al gruppo `docker` (`sudo usermod -aG docker $USER`, poi esci e rientra).
 
 ## Problemi comuni
 
 | Sintomo | Causa e soluzione |
 | :--- | :--- |
 | Su <http://127.0.0.1:8000> compare `{"detail":"Not Found"}` | L'interfaccia non è stata compilata: esegui `cd frontend && npm run build`, poi riavvia l'app |
-| `address already in use` all'avvio | La porta 8000 è occupata (forse l'app è già avviata in un altro terminale). Chiudi l'altra o usa un'altra porta: `… uvicorn copione_audio.api.main:app --port 8001` |
+| `address already in use` all'avvio | La porta 8000 è occupata (forse l'app è già avviata in un altro terminale, o con Docker). Chiudi l'altra o usa un'altra porta: `… uvicorn copione_audio.api.main:app --port 8001`; con Docker cambia `127.0.0.1:8000:8000` in `127.0.0.1:8001:8000` in `compose.yaml` |
 | Il browser non apre la pagina («impossibile raggiungere il sito») | L'app non è in esecuzione: avviala (passo 3) e aspetta il messaggio `Uvicorn running` |
 | «Voci non disponibili» con la sintesi online | Manca la connessione a internet: riprova, oppure passa alla sintesi offline |
 | «Voci non disponibili» con la sintesi offline | Non ci sono voci installate: aggiungile da «Gestisci voci offline» |
@@ -159,5 +170,6 @@ I test non usano la rete: il TTS viene sostituito da un finto sintetizzatore.
 - `pdf_folder/`: cartella di lavoro per PDF e copioni (ignorata da git)
 - `voci/`: voci Piper scaricate per la sintesi offline (ignorata da git)
 - `cache/`: battute già sintetizzate, si può cancellare (ignorata da git)
+- `Dockerfile`, `compose.yaml`: immagine Docker e avvio con Docker Compose
 - `REFACTOR.md`: piano della nuova versione
 - `CLAUDE.md`: note per chi sviluppa

@@ -27,7 +27,7 @@ Frontend in `frontend/` (Svelte 5 con rune, Vite, TypeScript):
 - `src/lib/impostazioni.ts` salva le impostazioni nel `localStorage`, con ogni accesso protetto da try/catch. Il motore TTS è una scelta globale; le voci di ogni copione sono salvate per motore;
 - in sviluppo Vite inoltra `/api` a `127.0.0.1:8000`; in produzione FastAPI serve `frontend/dist`.
 
-`Dockerfile` (radice, multi-stage): build del frontend con Node, dipendenze con `uv sync --frozen --no-dev --no-editable`, immagine finale `python:3.14-slim` con ffmpeg e utente non root. Il frontend arriva tramite `COPIONE_AUDIO_FRONTEND`; la cache TTS sta in `COPIONE_AUDIO_CACHE=/data/cache` e le voci Piper in `COPIONE_AUDIO_PIPER=/data/voci`, entrambi volumi.
+`Dockerfile` (radice, multi-stage): build del frontend con Node, dipendenze con `uv sync --frozen --no-dev --no-editable`, immagine finale `python:3.14-slim` con ffmpeg e utente non root. Il frontend arriva tramite `COPIONE_AUDIO_FRONTEND`; la cache TTS sta in `COPIONE_AUDIO_CACHE=/data/cache` e le voci Piper in `COPIONE_AUDIO_PIPER=/data/voci`, entrambi volumi. `compose.yaml` li collega alle cartelle `cache/` e `voci/` del progetto (tenute in git con un `.gitkeep`, perché se Docker le creasse sarebbero di root) e pubblica la porta solo su `127.0.0.1`.
 
 ## Architettura obiettivo (in breve)
 
@@ -49,7 +49,7 @@ uv run --project backend python .claude/skills/converti-copione/valida.py FILE.c
 cd frontend && npm run dev     # UI in sviluppo (serve anche il backend)
 cd frontend && npm run check   # controllo tipi Svelte
 cd frontend && npm run build   # build servita da FastAPI
-docker build -t copione-audio . && docker run -p 8000:8000 -v copione-audio-cache:/data/cache -v copione-audio-voci:/data/voci copione-audio
+docker compose up --build      # dalla radice, con Docker: app su localhost:8000, usa cache/ e voci/ del progetto
 ```
 
 Serve FFmpeg installato. Il TTS online (edge-tts) richiede internet; quello offline (Piper) solo le voci scaricate.

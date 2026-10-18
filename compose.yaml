@@ -1,0 +1,19 @@
+# Copione Audio con Docker Compose.
+#
+#   docker compose up --build     # avvia (e ricostruisce l'immagine se il codice è cambiato)
+#   docker compose down           # ferma e rimuove il container
+#
+# Poi apri http://localhost:8000.
+services:
+  copione-audio:
+    build: .
+    image: copione-audio
+    ports:
+      # Solo su questo computer: l'app non ha login, non va esposta alla rete.
+      - "127.0.0.1:8000:8000"
+    volumes:
+      # Le stesse cartelle dell'app avviata senza Docker. Esistono già nel
+      # repository (con un .gitkeep): se mancassero, Docker le creerebbe come
+      # root e il container (utente 1000) non potrebbe scriverci.
+      - ./cache:/data/cache
+      - ./voci:/data/voci

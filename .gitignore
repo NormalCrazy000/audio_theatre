@@ -3,8 +3,10 @@ __pycache__/*
 *$py.class
 pdf_folder/*
 # Voci Piper scaricate (modelli da decine di MB) e cache delle battute sintetizzate
-voci/
-cache/
+voci/*
+cache/*
+!voci/.gitkeep
+!cache/.gitkeep
 # Ambiente e cache
 .venv/
 .pytest_cache/
