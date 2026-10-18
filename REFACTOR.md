@@ -16,6 +16,8 @@ Obiettivo: passare da uno script CLI che legge un testo con separatori `&` inser
 | Battute dette insieme | `ROMEO e GIULIETTA: testo` (ammesse anche le virgole: `A, B e C:`). Se tra i nomi c'è il personaggio studiato, la battuta è sua |
 | Più personaggi studiati insieme | Non ora: TODO futuro (Fase 6) |
 | TTS | **edge-tts**, con una voce diversa per ogni personaggio, dietro un'interfaccia comune per poter aggiungere in futuro un motore offline (es. Piper) |
+| Uso | **Solo in locale**: niente pubblicazione online, quindi niente limiti d'uso né login. I job in memoria vanno bene |
+| Stacco tra i blocchi | **Silenzio** (`stacco_blocchi`), nessun segnale sonoro |
 
 ## Ordine delle fasi
 
@@ -120,7 +122,7 @@ Da fare: un parser con test, e la specifica copiata in `docs/formato-copione.md`
 > - **Battuta detta insieme e altrui**: la legge la voce del primo personaggio incluso.
 > - **Voci**: edge-tts ha 4 voci italiane (2 maschili e 2 femminili). L'assegnazione automatica alterna i generi e, quando le voci finiscono, cambia il tono. Il genere dei personaggi non è noto: si correggono con `--voce`.
 > - **Valori predefiniti**: contesto 3, pausa minima 1,5 s, massima 30 s, stacco 1,5 s, 0,4 s di respiro dopo ogni battuta letta.
-> - Lo stacco tra i blocchi è un silenzio; il segnale sonoro resta una domanda aperta.
+> - Lo stacco tra i blocchi è un silenzio (deciso: niente segnale sonoro).
 
 Si divide in due passi:
 
@@ -135,7 +137,7 @@ Opzioni:
 | `personaggi_inclusi` | 2 | Le battute degli altri personaggi da far sentire. Le battute degli esclusi vengono saltate del tutto. Di default tutti. |
 | `modalita_battuta` | 4 | `muta`: al posto della battuta c'è solo silenzio. `letta`: la battuta viene letta e poi c'è la pausa per ripeterla. In futuro anche `verifica`: prima la pausa, poi la battuta letta. |
 | `pausa` | 3 | Durata = durata TTS della mia battuta (calcolata anche se è muta) × `moltiplicatore` (default 1.2), limitata tra `min_s` e `max_s`. Il `[pausa=N]` scritto nel file ha la precedenza. |
-| `contesto` | 6 | `N` oppure `tutto`. Con N: per ogni mia battuta si sentono le N battute udibili precedenti, poi la mia battuta, poi lo `stacco_blocchi` (es. 1,5 s o un breve segnale). Con `tutto`: la scena intera in ordine, una volta sola. Il contesto non attraversa i confini di scena. |
+| `contesto` | 6 | `N` oppure `tutto`. Con N: per ogni mia battuta si sentono le N battute udibili precedenti, poi la mia battuta, poi lo `stacco_blocchi` (1,5 s di silenzio). Con `tutto`: la scena intera in ordine, una volta sola. Il contesto non attraversa i confini di scena. |
 | `scene` | – | Quali scene includere. Di default tutte. |
 | `leggi_didascalie` | – | Di default no. |
 | `voci` | – | Associazione personaggio → voce edge-tts, assegnata in automatico e modificabile. |
@@ -186,7 +188,7 @@ Le impostazioni si ricordano nel browser.
 
 ### Fase 6 – Opzionale
 
-- **Eseguibile ovunque**: un `Dockerfile` unico ✅ (multi-stage: Node per il frontend, uv per il backend, `python:3.14-slim` con ffmpeg; cache TTS nel volume `/data/cache`). Resta eventualmente il deploy su un servizio gratuito (Render, Fly.io, Hugging Face Spaces).
+- **Eseguibile ovunque**: un `Dockerfile` unico ✅ (multi-stage: Node per il frontend, uv per il backend, `python:3.14-slim` con ffmpeg; cache TTS nel volume `/data/cache`). Nessun deploy online: l'app resta in locale.
 - **Modello locale**: `OllamaConverter` integrato nell'upload del PDF.
 - **Più personaggi studiati insieme** (es. due ruoli piccoli): `personaggio` diventa un elenco.
 - **TTS offline**: un motore Piper dietro `TTSEngine`.
@@ -196,5 +198,4 @@ Le impostazioni si ricordano nel browser.
 
 ## Domande aperte
 
-- L'app resta solo in locale o va pubblicata online? Se va online servono limiti di uso e forse un login.
-- Lo stacco tra i blocchi deve essere silenzio o un segnale sonoro?
+Nessuna al momento.
