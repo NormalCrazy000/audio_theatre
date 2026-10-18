@@ -186,12 +186,15 @@ Flusso in una sola pagina:
 
 Le impostazioni si ricordano nel browser.
 
+> Aggiornamento (Fase 6): le impostazioni che non dipendono dal copione (sintesi online/offline e voci offline, muta/letta, contesto, pause, stacco, didascalie) stanno in una scheda **Impostazioni** prima di Carica, utilizzabile anche senza copione; Configura tiene personaggio, personaggi da ascoltare, scene e voci dei personaggi.
+
 ### Fase 6 – Opzionale
 
 - **Eseguibile ovunque**: un `Dockerfile` unico ✅ (multi-stage: Node per il frontend, uv per il backend, `python:3.14-slim` con ffmpeg; cache TTS nel volume `/data/cache`). Nessun deploy online: l'app resta in locale.
 - **Modello locale**: `OllamaConverter` integrato nell'upload del PDF. In sospeso: piano, domande aperte e prerequisito della GPU in [`docs/modello-locale.md`](docs/modello-locale.md).
 - **TTS offline** ✅: `PiperTTS` dietro `TTSEngine`, scelto dall'interfaccia (Online/Offline) e passato all'API nel campo `motore`. Note:
-  - voci italiane disponibili: paola e serena (femminili), riccardo (maschile, qualità `x_low`); `python -m copione_audio.tts.piper` scarica le tre consigliate (circa 150 MB) in `voci/` nella radice del progetto (esclusa da git) o in `$COPIONE_AUDIO_PIPER`;
+  - voci italiane disponibili: paola e serena (femminili), riccardo (maschile, qualità `x_low`); stanno in `voci/` nella radice del progetto (esclusa da git) o in `$COPIONE_AUDIO_PIPER`;
+  - **nessun download dall'app** (decisione): la sezione «Gestisci voci offline» delle Impostazioni mostra il catalogo con i link ai due file di ogni voce (`.onnx` e `.onnx.json`), l'utente li scarica a mano e li trascina nel riquadro (o li copia nella cartella). L'API (`GET/POST /api/voci/piper`, `DELETE /api/voci/piper/{nome}`) controlla nome e contenuto, segnala le voci incomplete e permette di eliminarle;
   - Piper non ha toni: il tono (in Hz, come per edge-tts) viene spostato dopo la sintesi con ffmpeg, rispetto a una voce media di 200 Hz; la velocità diventa `length_scale`;
   - l'audio viene salvato in mp3 a 64 kbit/s, così la cache resta piccola;
   - i modelli non dichiarano il genere: è scritto in `GENERI` per le voci note;

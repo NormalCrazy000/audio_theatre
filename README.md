@@ -4,44 +4,88 @@ Applicazione Python per **studiare un copione**: trasforma il testo in un file a
 
 Si usa da un'interfaccia web: carichi il copione, scegli il personaggio, le battute da ascoltare, le pause e le voci, e scarichi l'mp3. Il piano del progetto è in [`REFACTOR.md`](REFACTOR.md).
 
-## Con Docker (il modo più semplice)
+## Avvio rapido
 
-Serve solo Docker. Dalla radice del progetto:
+Tutti i comandi vanno lanciati dalla **cartella del progetto** (quella che contiene questo README).
 
-```bash
-docker build -t copione-audio .
-docker run -p 8000:8000 -v copione-audio-cache:/data/cache -v copione-audio-voci:/data/voci copione-audio
-```
+### 1. Installa i programmi necessari (una volta sola)
 
-Apri <http://localhost:8000>. Il volume `copione-audio-cache` conserva le battute già sintetizzate tra un avvio e l'altro. La sintesi online richiede internet; per usare quella offline scarica una volta le voci nel volume `copione-audio-voci`:
+| Programma | A cosa serve | Come installarlo |
+| :--- | :--- | :--- |
+| **uv** | Gestisce Python e le librerie del backend. Scarica da solo Python 3.14: non serve installarlo a parte | `curl -LsSf https://astral.sh/uv/install.sh \| sh` ([altri sistemi](https://docs.astral.sh/uv/getting-started/installation/)) |
+| **Node.js** 20.19+ o 22.12+ | Compila l'interfaccia web | <https://nodejs.org> (o il gestore pacchetti del sistema) |
+| **FFmpeg** | Crea e unisce i file audio | Ubuntu/Debian: `sudo apt install ffmpeg` · macOS: `brew install ffmpeg` · Windows: scaricalo e aggiungilo al PATH |
 
-```bash
-docker run --rm -v copione-audio-voci:/data/voci copione-audio python -m copione_audio.tts.piper
-```
+Per controllare che ci siano: `uv --version`, `node --version`, `ffmpeg -version`.
 
-## Senza Docker
+### 2. Installa le dipendenze e compila l'interfaccia
 
-### Prerequisiti
-
-- **Python** 3.14 o superiore
-- **uv** come gestore pacchetti
-- **Node.js** 20 o superiore (solo per compilare l'interfaccia)
-- **FFmpeg**, necessario a `pydub`:
-  - Ubuntu/Debian: `sudo apt install ffmpeg`
-  - macOS: `brew install ffmpeg`
-  - Windows: scaricalo e aggiungilo al PATH
-- **Connessione internet** per la sintesi online, edge-tts (voci neurali Microsoft). In alternativa c'è quella offline, vedi sotto
-
-### Installazione
+Una volta sola, e di nuovo ogni volta che aggiorni il codice (per esempio dopo un `git pull`):
 
 ```bash
 cd backend && uv sync && cd ..
 cd frontend && npm install && npm run build && cd ..
 ```
 
-### Sintesi offline (facoltativa)
+### 3. Avvia l'app
 
-Nel passo **Configura** si sceglie tra due motori:
+```bash
+uv run --project backend uvicorn copione_audio.api.main:app
+```
+
+Quando nel terminale compare `Uvicorn running on http://127.0.0.1:8000`, apri **<http://127.0.0.1:8000>** nel browser.
+
+Per fermarla premi `Ctrl+C` nel terminale. Le volte successive basta ripetere solo questo passo.
+
+La scelta tra voci online e offline, e tutte le altre impostazioni, si fanno poi dalla pagina (vedi [Come si usa](#come-si-usa)).
+
+## Con Docker (alternativa)
+
+Se hai Docker non servono uv, Node.js né FFmpeg. Dalla cartella del progetto:
+
+```bash
+docker build -t copione-audio .        # la prima volta e dopo ogni aggiornamento del codice
+docker run -p 8000:8000 -v copione-audio-cache:/data/cache -v copione-audio-voci:/data/voci copione-audio
+```
+
+Poi apri <http://localhost:8000>. I due volumi conservano tra un avvio e l'altro le battute già sintetizzate e le voci offline aggiunte dall'interfaccia. Se Docker risponde `permission denied`, usa `sudo docker …` oppure aggiungi il tuo utente al gruppo `docker` (`sudo usermod -aG docker $USER`, poi esci e rientra).
+
+## Problemi comuni
+
+| Sintomo | Causa e soluzione |
+| :--- | :--- |
+| Su <http://127.0.0.1:8000> compare `{"detail":"Not Found"}` | L'interfaccia non è stata compilata: esegui `cd frontend && npm run build`, poi riavvia l'app |
+| `address already in use` all'avvio | La porta 8000 è occupata (forse l'app è già avviata in un altro terminale). Chiudi l'altra o usa un'altra porta: `… uvicorn copione_audio.api.main:app --port 8001` |
+| Il browser non apre la pagina («impossibile raggiungere il sito») | L'app non è in esecuzione: avviala (passo 3) e aspetta il messaggio `Uvicorn running` |
+| «Voci non disponibili» con la sintesi online | Manca la connessione a internet: riprova, oppure passa alla sintesi offline |
+| «Voci non disponibili» con la sintesi offline | Non ci sono voci installate: aggiungile da «Gestisci voci offline» |
+| Errore che cita `ffmpeg` o `ffprobe` durante la generazione | FFmpeg non è installato o non è nel PATH (passo 1) |
+
+## Come si usa
+
+### Prepara il copione
+
+Serve un file `.copione.txt` nel formato standard (vedi [`docs/formato-copione.md`](docs/formato-copione.md)). Puoi:
+
+- scriverlo a mano;
+- partire da un PDF e chiedere a Claude Code di convertirlo con la skill `converti-copione`.
+
+### La pagina
+
+In cima ci sono le **Impostazioni**, che valgono per qualsiasi copione e si possono scegliere anche prima di caricarlo: sintesi vocale online o offline (con la gestione delle voci offline), battuta muta o letta, battute precedenti o scena intera, pause, stacco tra i blocchi e lettura delle didascalie.
+
+Poi quattro passi:
+
+1. **Carica** il `.copione.txt`.
+2. **Controlla** gli errori; puoi correggerli nell'editor integrato e scaricare il copione corretto.
+3. **Configura** ciò che dipende dal copione: personaggio da studiare, personaggi da ascoltare, scene e voci dei personaggi (con anteprima ▶).
+4. **Genera**: barra di avanzamento, poi ascolto e download dell'mp3.
+
+Tutto viene ricordato nel browser: le impostazioni in generale, personaggio e voci per ogni copione (le voci separatamente per ciascun motore).
+
+### Sintesi offline
+
+Nelle **Impostazioni** si sceglie tra due motori:
 
 | | Online (edge-tts) | Offline (Piper) |
 | :--- | :--- | :--- |
@@ -50,43 +94,18 @@ Nel passo **Configura** si sceglie tra due motori:
 | Internet | Sempre | Solo per scaricare le voci, una volta |
 | Il testo del copione | Viene inviato a Microsoft | Resta sul computer |
 
-Per usare Piper scarica le voci italiane (circa 150 MB) nella cartella `voci/` del progetto (esclusa da git), oppure in quella indicata da `$COPIONE_AUDIO_PIPER`:
+L'app non scarica niente da sola. Per usare Piper, nelle **Impostazioni** apri **Gestisci voci offline**:
 
-```bash
-uv run --project backend python -m copione_audio.tts.piper
-```
+1. per ogni voce che vuoi, scarica dai link **tutti e due i file**: il modello `.onnx` e la configurazione `.onnx.json` (dal [repository ufficiale](https://huggingface.co/rhasspy/piper-voices); le italiane pesano 30–115 MB l'una);
+2. trascinali nel riquadro: l'app li controlla e li salva nella cartella `voci/` del progetto (esclusa da git), oppure in quella indicata da `$COPIONE_AUDIO_PIPER`. In alternativa copiali a mano in quella cartella e premi «aggiorna l'elenco».
 
-Le voci si possono anche scegliere a mano, per esempio `… -m copione_audio.tts.piper it_IT-serena-high` ([elenco delle voci](https://huggingface.co/rhasspy/piper-voices)). Piper non ha toni diversi: il tono viene spostato dopo la sintesi.
+Dalla stessa sezione si vedono le voci installate, quelle incomplete (manca uno dei due file) e si eliminano. Piper non ha toni diversi: il tono viene spostato dopo la sintesi.
 
-## Come si usa
+## Sviluppo
 
-### 1. Prepara il copione
+### Interfaccia con ricarica automatica
 
-Serve un file `.copione.txt` nel formato standard (vedi [`docs/formato-copione.md`](docs/formato-copione.md)). Puoi:
-
-- scriverlo a mano;
-- partire da un PDF e chiedere a Claude Code di convertirlo con la skill `converti-copione`.
-
-### 2. Avvia l'app
-
-Dalla radice del progetto:
-
-```bash
-uv run --project backend uvicorn copione_audio.api.main:app
-```
-
-Apri <http://127.0.0.1:8000>. La pagina guida in quattro passi:
-
-1. **Carica** il `.copione.txt`.
-2. **Controlla** gli errori; puoi correggerli nell'editor integrato e scaricare il copione corretto.
-3. **Configura**: personaggio, battuta muta o letta, battute precedenti o scena intera, pause, sintesi online o offline, personaggi da ascoltare, scene e voci (con anteprima ▶).
-4. **Genera**: barra di avanzamento, poi ascolto e download dell'mp3.
-
-Le impostazioni vengono ricordate nel browser; personaggio e voci per ogni copione (le voci separatamente per ciascun motore).
-
-### Sviluppo dell'interfaccia
-
-In due terminali:
+In due terminali, dalla cartella del progetto:
 
 ```bash
 uv run --project backend uvicorn copione_audio.api.main:app --reload
@@ -106,13 +125,16 @@ La documentazione interattiva è su <http://127.0.0.1:8000/docs>.
 | `GET /api/voci?lingua=it&motore=edge` | Voci disponibili (`motore`: `edge` o `piper`; per Piper quelle installate) |
 | `POST /api/voci/assegna` | `{"lingua", "personaggi", "motore"}`: assegnazione automatica delle voci |
 | `POST /api/voci/anteprima` | `{"voce", "testo", "motore"}`: mp3 di prova di una voce |
+| `GET /api/voci/piper?lingua=it` | Voci offline: cartella, installate e catalogo con i link |
+| `POST /api/voci/piper` | Upload dei file `.onnx` e `.onnx.json` di una o più voci |
+| `DELETE /api/voci/piper/{nome}` | Elimina una voce offline |
 | `POST /api/audio` | `{"testo", "opzioni", "voci", "motore"}`: avvia la generazione e restituisce un `id` |
 | `GET /api/audio/{id}` | Stato e progresso |
 | `GET /api/audio/{id}/mp3` | Scarica l'mp3 |
 
 Le battute sintetizzate vengono salvate nella cartella `cache/` del progetto (esclusa da git; oppure in `$COPIONE_AUDIO_CACHE`): rigenerare con opzioni diverse è molto più veloce. Si può cancellare in qualsiasi momento.
 
-## Test
+### Test
 
 ```bash
 cd backend && uv run pytest        # backend, senza rete
@@ -121,7 +143,7 @@ cd frontend && npm run check       # tipi e componenti Svelte
 
 I test non usano la rete: il TTS viene sostituito da un finto sintetizzatore.
 
-## Struttura
+### Struttura
 
 - `backend/src/copione_audio/`: pacchetto Python
   - `api/`: API FastAPI

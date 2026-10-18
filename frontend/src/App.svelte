@@ -5,6 +5,7 @@
   import Configura from './lib/Configura.svelte'
   import Controlla from './lib/Controlla.svelte'
   import Genera from './lib/Genera.svelte'
+  import Impostazioni from './lib/Impostazioni.svelte'
   import {
     leggiMotore,
     leggiOpzioni,
@@ -27,7 +28,8 @@
   let scene = $state<number[]>([])
   let voci = $state<Record<string, Voce>>({})
   let elencoVoci = $state<InfoVoce[]>([])
-  let motore = $state<Motore>(leggiMotore())
+  const motoreIniziale = leggiMotore()
+  let motore = $state<Motore>(motoreIniziale)
   let caricamentoVoci = $state(false)
   let erroreVoci = $state<string | null>(null)
 
@@ -35,6 +37,8 @@
   let vociPerMotore: NonNullable<SceltePerCopione['vociPerMotore']> = {}
   // Solo l'ultima richiesta di voci conta, se si cambia motore più volte.
   let richiestaVoci = 0
+  // L'ultimo motore scelto: `motore` cambia solo quando le sue voci sono caricate.
+  let motoreVoluto: Motore = motoreIniziale
 
   // Il copione (titolo) per cui sono state preparate le scelte: rianalizzare
   // lo stesso copione dopo una correzione non le azzera.
@@ -91,14 +95,20 @@
       const risultato = await api.analizza(testo)
       if (risultato.titolo !== titoloPreparato) {
         const salvate = leggiScelte(risultato.titolo)
-        richiestaVoci++ // annulla un eventuale cambio di motore in corso
-        const caricate = await vociDelMotore(risultato, motore, salvate.vociPerMotore ?? {})
+        // Annulla un eventuale cambio di motore in corso: le voci si caricano qui.
+        const richiesta = ++richiestaVoci
+        const m = motoreVoluto
+        const caricate = await vociDelMotore(risultato, m, salvate.vociPerMotore ?? {})
         prepara(risultato, salvate)
-        applicaVoci(motore, caricate)
+        const motoreCambiato = richiesta !== richiestaVoci
+        if (!motoreCambiato) applicaVoci(m, caricate)
+        analisi = risultato
+        // Il motore è cambiato durante il caricamento: si ricaricano le sue voci.
+        if (motoreCambiato) cambiaMotore(motoreVoluto)
       } else {
         scene = scene.filter((i) => i < risultato.scene.length)
+        analisi = risultato
       }
-      analisi = risultato
     } catch (e) {
       errore = e instanceof Error ? e.message : String(e)
     } finally {
@@ -155,7 +165,13 @@
   }
 
   async function cambiaMotore(nuovo: Motore) {
-    if (!analisi) return
+    motoreVoluto = nuovo
+    if (!analisi) {
+      // Senza copione non ci sono voci da caricare: si caricheranno con il copione.
+      richiestaVoci++
+      applicaVoci(nuovo, { elenco: [], voci: {}, errore: null })
+      return
+    }
     const richiesta = ++richiestaVoci
     caricamentoVoci = true
     const caricate = await vociDelMotore(analisi, nuovo, vociPerMotore)
@@ -170,6 +186,18 @@
 </header>
 
 <main>
+  <section class="scheda">
+    <h2><span class="numero-passo" aria-hidden="true">⚙</span> Impostazioni</h2>
+    <Impostazioni
+      bind:generali
+      {motore}
+      lingua={analisi?.lingua || 'it'}
+      {caricamentoVoci}
+      {erroreVoci}
+      oncambiamotore={cambiaMotore}
+    />
+  </section>
+
   <section class="scheda">
     <h2><span class="numero-passo">1</span> Carica</h2>
     <Carica oncaricato={carica} />
@@ -196,13 +224,10 @@
         bind:personaggio
         bind:esclusi
         bind:scene
-        bind:generali
         bind:voci
         {elencoVoci}
         {motore}
-        {caricamentoVoci}
-        {erroreVoci}
-        oncambiamotore={cambiaMotore}
+        leggiDidascalie={generali.leggi_didascalie}
       />
     </section>
 

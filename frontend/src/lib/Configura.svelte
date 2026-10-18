@@ -1,6 +1,5 @@
 <script lang="ts">
   import { anteprima, NARRATORE, type Analisi, type InfoVoce, type Motore, type Voce } from './api'
-  import type { OpzioniGenerali } from './impostazioni'
 
   type Props = {
     analisi: Analisi
@@ -9,13 +8,11 @@
     esclusi: string[]
     /** Indici delle scene scelte. */
     scene: number[]
-    generali: OpzioniGenerali
     voci: Record<string, Voce>
     elencoVoci: InfoVoce[]
     motore: Motore
-    caricamentoVoci: boolean
-    erroreVoci: string | null
-    oncambiamotore: (motore: Motore) => void
+    /** Se si leggono le didascalie: allora serve anche la voce del narratore. */
+    leggiDidascalie: boolean
   }
 
   let {
@@ -23,13 +20,10 @@
     personaggio = $bindable(),
     esclusi = $bindable(),
     scene = $bindable(),
-    generali = $bindable(),
     voci = $bindable(),
     elencoVoci,
     motore,
-    caricamentoVoci,
-    erroreVoci,
-    oncambiamotore,
+    leggiDidascalie,
   }: Props = $props()
 
   const TONI = ['-24Hz', '-12Hz', '+0Hz', '+12Hz', '+24Hz']
@@ -40,11 +34,9 @@
   )
   const conVoce = $derived([
     ...analisi.personaggi,
-    ...(generali.leggi_didascalie ? [NARRATORE] : []),
+    ...(leggiDidascalie ? [NARRATORE] : []),
   ])
 
-  // Ultimo numero di battute scelto, per ritrovarlo tornando da "scena intera".
-  let ultimoContesto = $state(3)
   let inAscolto = $state<string | null>(null)
   let erroreAnteprima = $state<string | null>(null)
 
@@ -56,15 +48,6 @@
       .replace(/-([a-z_]+)$/, ', $1')
     const genere = { Male: 'M', Female: 'F' }[v.genere]
     return genere ? `${nome} (${genere})` : nome
-  }
-
-  function cambiaContesto(scenaIntera: boolean) {
-    if (scenaIntera) {
-      if (generali.contesto !== null) ultimoContesto = generali.contesto
-      generali.contesto = null
-    } else {
-      generali.contesto = ultimoContesto
-    }
   }
 
   function alternaEscluso(nome: string, incluso: boolean) {
@@ -92,115 +75,14 @@
   }
 </script>
 
-<div class="griglia">
-  <label class="campo">
-    <span>Personaggio da studiare</span>
-    <select bind:value={personaggio}>
-      {#each analisi.personaggi as nome (nome)}
-        <option value={nome}>{nome} ({analisi.battute_per_personaggio[nome]} battute)</option>
-      {/each}
-    </select>
-  </label>
-
-  <fieldset class="campo">
-    <legend>La tua battuta</legend>
-    <label class="scelta">
-      <input type="radio" bind:group={generali.modalita_battuta} value="muta" />
-      <span><strong>Muta</strong> — solo la pausa per dirla</span>
-    </label>
-    <label class="scelta">
-      <input type="radio" bind:group={generali.modalita_battuta} value="letta" />
-      <span><strong>Letta</strong> — la senti, poi la ripeti</span>
-    </label>
-  </fieldset>
-
-  <fieldset class="campo">
-    <legend>Prima di ogni tua battuta</legend>
-    <label class="scelta">
-      <input
-        type="radio"
-        name="contesto"
-        checked={generali.contesto !== null}
-        onchange={() => cambiaContesto(false)}
-      />
-      <span>
-        le
-        <input
-          class="numero"
-          type="number"
-          min="0"
-          max="50"
-          disabled={generali.contesto === null}
-          value={generali.contesto ?? ultimoContesto}
-          oninput={(e) => (generali.contesto = Math.max(0, e.currentTarget.valueAsNumber || 0))}
-          aria-label="Numero di battute precedenti"
-        />
-        battute precedenti
-      </span>
-    </label>
-    <label class="scelta">
-      <input
-        type="radio"
-        name="contesto"
-        checked={generali.contesto === null}
-        onchange={() => cambiaContesto(true)}
-      />
-      <span>la scena intera, una volta sola</span>
-    </label>
-  </fieldset>
-
-  <fieldset class="campo">
-    <legend>Sintesi vocale</legend>
-    <label class="scelta">
-      <input
-        type="radio"
-        name="motore"
-        checked={motore === 'edge'}
-        disabled={caricamentoVoci}
-        onchange={() => oncambiamotore('edge')}
-      />
-      <span><strong>Online</strong> — voci Microsoft, più naturali</span>
-    </label>
-    <label class="scelta">
-      <input
-        type="radio"
-        name="motore"
-        checked={motore === 'piper'}
-        disabled={caricamentoVoci}
-        onchange={() => oncambiamotore('piper')}
-      />
-      <span><strong>Offline</strong> — Piper, senza internet</span>
-    </label>
-    {#if caricamentoVoci}
-      <p class="tenue nota">Caricamento delle voci…</p>
-    {:else if erroreVoci}
-      <p class="testo-errore nota" role="alert">{erroreVoci}</p>
-    {/if}
-  </fieldset>
-
-  <fieldset class="campo">
-    <legend>Pausa per dire la battuta</legend>
-    <label class="riga">
-      <span>Durata rispetto alla lettura</span>
-      <span class="valore">
-        <input type="range" min="0.5" max="3" step="0.1" bind:value={generali.moltiplicatore} />
-        <output>×{generali.moltiplicatore.toFixed(1)}</output>
-      </span>
-    </label>
-    <label class="riga">
-      <span>Minimo (s)</span>
-      <input class="numero" type="number" min="0" step="0.5" bind:value={generali.pausa_min_s} />
-    </label>
-    <label class="riga">
-      <span>Massimo (s)</span>
-      <input class="numero" type="number" min="1" step="1" bind:value={generali.pausa_max_s} />
-    </label>
-    <label class="riga">
-      <span>Stacco tra i blocchi (s)</span>
-      <input class="numero" type="number" min="0" step="0.5" bind:value={generali.stacco_s} />
-    </label>
-  </fieldset>
-</div>
+<label class="campo">
+  <span>Personaggio da studiare</span>
+  <select bind:value={personaggio}>
+    {#each analisi.personaggi as nome (nome)}
+      <option value={nome}>{nome} ({analisi.battute_per_personaggio[nome]} battute)</option>
+    {/each}
+  </select>
+</label>
 
 <details>
   <summary>Personaggi da ascoltare <span class="tenue">({altri.length - esclusi.filter((n) => altri.includes(n)).length}/{altri.length})</span></summary>
@@ -249,12 +131,12 @@
 <details>
   <summary>Voci</summary>
   <p class="tenue">
-    Assegnate in automatico senza conoscere il genere dei personaggi: controllale con ▶.
+    Voci {motore === 'piper' ? 'offline' : 'online'} (si cambia nelle Impostazioni), assegnate in automatico
+    senza conoscere il genere dei personaggi: controllale con ▶.
   </p>
-  <label class="scelta">
-    <input type="checkbox" bind:checked={generali.leggi_didascalie} />
-    <span>Leggi anche le didascalie (voce del narratore)</span>
-  </label>
+  {#if Object.keys(voci).length === 0}
+    <p class="testo-errore">Nessuna voce disponibile: controlla la sintesi vocale nelle Impostazioni.</p>
+  {/if}
   <div class="voci">
     {#each conVoce as nome (nome)}
       {#if voci[nome]}
@@ -289,28 +171,16 @@
 </details>
 
 <style>
-  .griglia {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-    gap: 1rem 1.5rem;
-    margin-bottom: 1rem;
-  }
-
   .campo {
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    min-width: 0;
+    max-width: 24rem;
+    margin-bottom: 1rem;
   }
 
-  .campo > span,
-  legend {
+  .campo > span {
     font-weight: 600;
-    padding: 0;
-    margin-bottom: 0.2rem;
   }
 
   .scelta {
@@ -323,37 +193,6 @@
   .scelta.spenta {
     opacity: 0.55;
     cursor: default;
-  }
-
-  .riga {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .valore {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .valore input {
-    width: 7rem;
-  }
-
-  output {
-    min-width: 2.5rem;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .numero {
-    width: 4.5rem;
-  }
-
-  .nota {
-    margin: 0.2rem 0 0;
-    overflow-wrap: anywhere;
   }
 
   details {
