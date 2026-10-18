@@ -134,6 +134,6 @@ I test non usano la rete: il TTS viene sostituito da un finto sintetizzatore.
 - `frontend/`: interfaccia Svelte 5 + Vite (`src/App.svelte` e i passi in `src/lib/`)
 - `docs/formato-copione.md`: specifica del formato del copione
 - `.claude/skills/converti-copione/`: skill che converte un PDF nel formato standard
-- `pdf_folder/`, `input/`, `audio/`: cartelle di lavoro (ignorate da git)
+- `pdf_folder/`: cartella di lavoro per PDF e copioni (ignorata da git)
 - `REFACTOR.md`: piano della nuova versione
 - `CLAUDE.md`: note per chi sviluppa

@@ -9,12 +9,12 @@ Obiettivo: passare da uno script CLI che legge un testo con separatori `&` inser
 | Stack | Backend **FastAPI** (Python, riusa il codice attuale) + frontend **Svelte** (SPA con Vite) |
 | Formato input | Testo semplice `NOME: battuta` con intestazione dei personaggi (vedi sotto) |
 | Conversione PDF → formato | Subito una **skill Claude**; dietro un'interfaccia comune, così in futuro si aggiunge un **modello locale** (es. Ollama), che è la soluzione preferita |
-| Output | **File mp3 da scaricare** (il player interattivo nel browser è un'idea per dopo) |
+| Output | **File mp3 da scaricare**. Niente player interattivo nel browser (idea scartata) |
 | Contesto (battute precedenti) | **Blocchi**: per ogni mia battuta si sentono le N battute precedenti, poi la mia. Con "tutto" si sente la scena intera una sola volta |
 | Pause | **Proporzionali** alla lunghezza della battuta, con moltiplicatore regolabile, più un **override per singola battuta** scritto nel file |
 | Battuta non oscurata | Viene letta, poi segue una pausa per ripeterla |
 | Battute dette insieme | `ROMEO e GIULIETTA: testo` (ammesse anche le virgole: `A, B e C:`). Se tra i nomi c'è il personaggio studiato, la battuta è sua |
-| Più personaggi studiati insieme | Non ora: TODO futuro (Fase 6) |
+| Più personaggi studiati insieme | No (idea scartata): si studia un personaggio alla volta |
 | TTS | **edge-tts**, con una voce diversa per ogni personaggio, dietro un'interfaccia comune per poter aggiungere in futuro un motore offline (es. Piper) |
 | Uso | **Solo in locale**: niente pubblicazione online, quindi niente limiti d'uso né login. I job in memoria vanno bene |
 | Stacco tra i blocchi | **Silenzio** (`stacco_blocchi`), nessun segnale sonoro |
@@ -135,7 +135,7 @@ Opzioni:
 | :--- | :--- | :--- |
 | `personaggio` | 5 | Il personaggio da studiare. Una battuta detta insieme che lo include è sua. |
 | `personaggi_inclusi` | 2 | Le battute degli altri personaggi da far sentire. Le battute degli esclusi vengono saltate del tutto. Di default tutti. |
-| `modalita_battuta` | 4 | `muta`: al posto della battuta c'è solo silenzio. `letta`: la battuta viene letta e poi c'è la pausa per ripeterla. In futuro anche `verifica`: prima la pausa, poi la battuta letta. |
+| `modalita_battuta` | 4 | `muta`: al posto della battuta c'è solo silenzio. `letta`: la battuta viene letta e poi c'è la pausa per ripeterla. |
 | `pausa` | 3 | Durata = durata TTS della mia battuta (calcolata anche se è muta) × `moltiplicatore` (default 1.2), limitata tra `min_s` e `max_s`. Il `[pausa=N]` scritto nel file ha la precedenza. |
 | `contesto` | 6 | `N` oppure `tutto`. Con N: per ogni mia battuta si sentono le N battute udibili precedenti, poi la mia battuta, poi lo `stacco_blocchi` (1,5 s di silenzio). Con `tutto`: la scena intera in ordine, una volta sola. Il contesto non attraversa i confini di scena. |
 | `scene` | – | Quali scene includere. Di default tutte. |
@@ -189,8 +189,7 @@ Le impostazioni si ricordano nel browser.
 ### Fase 6 – Opzionale
 
 - **Eseguibile ovunque**: un `Dockerfile` unico ✅ (multi-stage: Node per il frontend, uv per il backend, `python:3.14-slim` con ffmpeg; cache TTS nel volume `/data/cache`). Nessun deploy online: l'app resta in locale.
-- **Modello locale**: `OllamaConverter` integrato nell'upload del PDF.
-- **Più personaggi studiati insieme** (es. due ruoli piccoli): `personaggio` diventa un elenco.
+- **Modello locale**: `OllamaConverter` integrato nell'upload del PDF. In sospeso: piano, domande aperte e prerequisito della GPU in [`docs/modello-locale.md`](docs/modello-locale.md).
 - **TTS offline** ✅: `PiperTTS` dietro `TTSEngine`, scelto dall'interfaccia (Online/Offline) e passato all'API nel campo `motore`. Note:
   - voci italiane disponibili: paola e serena (femminili), riccardo (maschile, qualità `x_low`); `python -m copione_audio.tts.piper` scarica le tre consigliate (circa 150 MB) in `~/.local/share/copione-audio/piper` o `$COPIONE_AUDIO_PIPER`;
   - Piper non ha toni: il tono (in Hz, come per edge-tts) viene spostato dopo la sintesi con ffmpeg, rispetto a una voce media di 200 Hz; la velocità diventa `length_scale`;
@@ -198,7 +197,6 @@ Le impostazioni si ricordano nel browser.
   - i modelli non dichiarano il genere: è scritto in `GENERI` per le voci note;
   - le voci scelte nel browser sono ricordate per motore; l'elenco delle voci Piper si rilegge ogni volta, quindi una voce appena scaricata compare senza riavviare;
   - collaudo: LAURA, scena 4 di *Così non vale*, 5,3 minuti di audio in 5 s (circa 20 s con edge-tts).
-- **Player interattivo** nel browser.
 
 ---
 

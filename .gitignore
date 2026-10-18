@@ -1,7 +1,3 @@
-audio/
-temp/
-input.txt
-input/
 __pycache__/*
 *.py[cod]
 *$py.class

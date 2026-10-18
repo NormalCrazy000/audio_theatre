@@ -1,0 +1,89 @@
+# Modello locale (Ollama) – piano
+
+Fase 6 di [`REFACTOR.md`](../REFACTOR.md): convertire un PDF nel formato del copione direttamente dall'app, con un modello che gira sul computer. **Stato: in sospeso**, prima va sistemata la GPU (vedi sotto). Niente codice scritto finora.
+
+## Come l'app parla con il modello
+
+Ollama è un server locale con un'API HTTP su `http://127.0.0.1:11434`. L'app non carica il modello in Python: gli manda richieste HTTP.
+
+```
+Browser ──PDF──▶ FastAPI ──estrae il testo (pypdf)──▶ OllamaConverter ──HTTP──▶ Ollama (qwen3)
+                    ▲                                        │
+                    └──── copione .copione.txt ◀── ricomposto dal codice + validator
+```
+
+- `OllamaConverter` implementa l'interfaccia `Converter` (`conversione/base.py`) e usa le regole di `conversione/istruzioni.md`, le stesse della skill.
+- **Il modello classifica le righe, non riscrive il copione.** Riceve il testo a blocchi di circa 100 righe numerate e risponde in JSON (con lo schema imposto tramite il parametro `format` di Ollama):
+
+  ```json
+  {"righe": [{"n": 12, "tipo": "battuta", "personaggio": "ALBERTO"},
+             {"n": 13, "tipo": "continua"},
+             {"n": 14, "tipo": "didascalia"},
+             {"n": 15, "tipo": "scarta"}]}
+  ```
+
+  Il copione viene ricomposto dal codice con il testo originale delle righe. Motivo: un modello da 8B che riscrive un copione intero salta o altera le battute, inaccettabile per chi deve impararle a memoria; le risposte brevi sono anche molto più veloci.
+- Una prima passata sull'inizio del testo ricava l'elenco dei personaggi e il modo in cui sono indicate le scene: fa da contesto per tutti i blocchi.
+- Alla fine passa il validator; il risultato arriva nell'editor del passo **Controlla**, con gli errori cliccabili.
+- Job asincrono con avanzamento, come per l'audio: `POST /api/conversioni` → stato → risultato.
+- Va impostato `num_ctx` in ogni richiesta: il servizio Ollama usa un contesto predefinito di 4096 token.
+
+## Come si avvia il modello
+
+"Avviare il modello" vuol dire: server Ollama acceso (sulla macchina di sviluppo parte già come servizio di sistema) + modello caricato in memoria.
+
+Scelta all'avvio dell'app, con una variabile o uno script:
+
+```bash
+COPIONE_AUDIO_MODELLO=qwen3 uv run --project backend uvicorn copione_audio.api.main:app
+./avvia.sh --modello-locale   # proposta: script che imposta la variabile
+```
+
+Con il modello attivo, nel lifespan di FastAPI e in background (l'app parte subito):
+
+1. controlla che Ollama risponda; se non risponde lancia `ollama serve` come processo figlio e lo ferma alla chiusura;
+2. controlla che il modello sia scaricato; se manca lo segnala nell'interfaccia (niente download automatico di 5 GB);
+3. lo precarica e lo tiene in memoria (`keep_alive`) finché l'app è aperta; alla chiusura lo scarica (`keep_alive: 0`).
+
+In Docker l'app non avvia Ollama: si collega a quello del computer su `host.docker.internal:11434`.
+
+Su Linux Ollama non ha un'interfaccia grafica ufficiale (l'app desktop esiste solo per macOS e Windows). Non serve: lo stato del modello (in caricamento, pronto, mancante) lo mostra la nostra pagina.
+
+## Interfaccia
+
+Nel passo **Carica**, con un PDF:
+
+- modello attivo e pronto: pulsante «Converti con il modello locale», barra di avanzamento («blocco 7 di 20»), poi il copione nel passo Controlla;
+- modello non attivo: la spiegazione attuale per convertirlo con la skill;
+- modello in caricamento o mancante: un messaggio che dice cosa fare.
+
+## Passi di sviluppo
+
+1. `conversione/ollama.py`: client HTTP, prompt da `istruzioni.md`, classificazione a blocchi, ricomposizione; test con un finto Ollama.
+2. Avvio e arresto nel lifespan: controllo del server, `ollama serve` se serve, precaricamento, stato.
+3. API: `GET /api/conversione/stato`, `POST /api/conversioni` con stato e risultato.
+4. Frontend: pulsante, avanzamento, risultato nell'editor.
+5. Collaudo sul PDF di *Così non vale*, confrontando i conteggi con quelli della skill (19 scene, 1109 battute).
+6. `avvia.sh`, Docker, documentazione.
+
+## Domande ancora aperte
+
+- **Modello predefinito**: `qwen3` 8B (già scaricato, buono con italiano e JSON) oppure `qwen3:14b` (circa 9 GB, sta nei 16 GB della GPU, più affidabile). Resta comunque configurabile.
+- **Scelta all'avvio o interruttore nell'interfaccia** per caricare e scaricare il modello senza riavviare. Richiesta iniziale: scelta all'avvio.
+- Conferma della strategia «il modello classifica, il codice ricompone».
+
+## Prerequisito: GPU sulla macchina di sviluppo
+
+Diagnosi del 2026-10-18 (Ubuntu 24.04.5, RTX 4080 SUPER, 32 GB di RAM, Ollama 0.13.5 con `qwen3` 8B, `llama3.1:8b`, `gemma3`):
+
+- Ollama gira **sulla CPU** (`inference compute … library=cpu` nei log): un copione come *Così non vale* richiederebbe 30–60 minuti (stima), contro pochi minuti sulla GPU;
+- il driver `nvidia-driver-595-open` (quello consigliato) è installato, ma **i moduli del kernel esistono solo per il 7.0.0-31**. In uso c'è il 7.0.0-34 ed è installato anche il 7.0.0-38 (parte al prossimo riavvio);
+- il meta-pacchetto `linux-modules-nvidia-595-open-generic-hwe-24.04` è rimasto alla versione 31 (probabilmente "kept back"), quindi `modprobe nvidia` → «Module nvidia not found». Secure Boot è disattivato.
+
+Soluzione (comandi da lanciare a mano):
+
+1. `sudo apt install linux-modules-nvidia-595-open-generic-hwe-24.04`, controllando che apt non proponga di rimuovere pacchetti;
+2. riavviare (parte il kernel 38, con i moduli);
+3. verificare: `nvidia-smi` mostra la scheda; dopo `sudo systemctl restart ollama` i log mostrano `library=cuda`; misurare la velocità di `qwen3`.
+
+Rete di sicurezza: dal menu di GRUB si può sempre avviare il kernel 7.0.0-31, che ha i moduli.

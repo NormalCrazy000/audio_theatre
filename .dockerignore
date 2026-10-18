@@ -9,8 +9,5 @@
 .ruff_cache
 **/.pytest_cache
 .claude
-audio
-input
-temp
 pdf_folder
 *.mp3
