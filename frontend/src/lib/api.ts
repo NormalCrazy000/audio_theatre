@@ -53,6 +53,44 @@ export type StatoLavoro = {
   nome_file: string
 }
 
+export type VoceInstallata = {
+  nome: string
+  lingua: string
+  genere: string
+  /** Se c'è il file `.onnx`. */
+  modello: boolean
+  /** Se c'è il file `.onnx.json` ed è valido. */
+  configurazione: boolean
+  completa: boolean
+  mb: number
+}
+
+export type VoceCatalogo = {
+  nome: string
+  genere: string
+  qualita: string
+  mb: number
+  dati: string
+  link_modello: string
+  link_configurazione: string
+  pagina: string
+  installata: boolean
+}
+
+/** Le voci Piper: cartella, installate e catalogo con i link per scaricarle a mano. */
+export type VociOffline = {
+  cartella: string
+  installate: VoceInstallata[]
+  catalogo: VoceCatalogo[]
+  repository: string
+}
+
+export type RisultatoAggiunta = {
+  aggiunti: string[]
+  errori: { file: string; messaggio: string }[]
+  voci: VociOffline
+}
+
 export const NARRATORE = 'NARRATORE'
 
 /** Errore dell'API con il messaggio da mostrare e, se ci sono, gli errori del copione. */
@@ -114,6 +152,25 @@ export async function anteprima(voce: Voce, testo: string, motore: Motore): Prom
     body: JSON.stringify({ voce, testo, motore }),
   })
   return URL.createObjectURL(await risposta.blob())
+}
+
+export const vociOffline = (lingua: string) =>
+  json<VociOffline>(`/api/voci/piper?${new URLSearchParams({ lingua })}`)
+
+/** Salva nella cartella delle voci i file `.onnx` e `.onnx.json` scaricati a mano. */
+export async function aggiungiVociOffline(file: File[], lingua: string): Promise<RisultatoAggiunta> {
+  const corpo = new FormData()
+  for (const f of file) corpo.append('file', f)
+  const risposta = await chiama(`/api/voci/piper?${new URLSearchParams({ lingua })}`, {
+    method: 'POST',
+    body: corpo,
+  })
+  return risposta.json()
+}
+
+export async function eliminaVoceOffline(nome: string, lingua: string): Promise<VociOffline> {
+  const percorso = `/api/voci/piper/${encodeURIComponent(nome)}?${new URLSearchParams({ lingua })}`
+  return (await chiama(percorso, { method: 'DELETE' })).json()
 }
 
 export const avviaAudio = (

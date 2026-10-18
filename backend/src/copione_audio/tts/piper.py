@@ -1,19 +1,12 @@
 """
 Motore Piper: sintesi vocale sul computer, senza internet.
 
-Le voci sono modelli ONNX (`NOME.onnx` + `NOME.onnx.json`) da scaricare una
-volta sola nella cartella delle voci. Per scaricare quelle italiane:
-
-    uv run --project backend python -m copione_audio.tts.piper
+Le voci sono modelli ONNX (`NOME.onnx` + `NOME.onnx.json`) nella cartella delle
+voci; si scaricano a mano e si gestiscono con `voci_piper`.
 """
 
-import argparse
 import asyncio
-import json
-import os
 import re
-import shutil
-import tempfile
 import threading
 from io import BytesIO
 from pathlib import Path
@@ -21,25 +14,11 @@ from pathlib import Path
 from pydub import AudioSegment
 
 from copione_audio.tts.base import InfoVoce, Voce
-
-VOCI_CONSIGLIATE = ("it_IT-paola-medium", "it_IT-riccardo-x_low", "it_IT-serena-medium")
-"""Le voci italiane da scaricare: una per ogni speaker disponibile."""
-
-# I modelli non dichiarano il genere: quello delle voci note è scritto qui.
-GENERI = {"paola": "Female", "riccardo": "Male", "serena": "Female"}
+from copione_audio.tts.voci_piper import cartella_predefinita, voci_installate
 
 # Piper non varia il tono: lo si sposta dopo la sintesi, trattando gli Hz
 # delle voci (pensati per edge-tts) come scarto da una voce media di 200 Hz.
 HZ_RIFERIMENTO = 200
-
-
-# piper.py → tts → copione_audio → src → backend → radice del progetto
-VOCI_PREDEFINITE = Path(__file__).parents[4] / "voci"
-
-
-def cartella_predefinita() -> Path:
-    """`$COPIONE_AUDIO_PIPER`, oppure la cartella `voci/` nella radice del progetto."""
-    return Path(os.environ.get("COPIONE_AUDIO_PIPER", VOCI_PREDEFINITE))
 
 
 def _percentuale(valore: str, unita: str) -> float:
@@ -56,20 +35,25 @@ class PiperTTS:
     def __init__(self, cartella: Path | None = None):
         """:param cartella: Dove stanno le voci; di default `cartella_predefinita()`."""
         self.cartella = cartella or cartella_predefinita()
-        self._modelli: dict[str, object] = {}
+        self._modelli: dict[tuple[str, int], object] = {}
         self._blocco = threading.Lock()
 
     def _modello(self, nome: str):
-        """Carica un modello una volta sola (la prima sintesi con quella voce)."""
+        """
+        Carica un modello una volta sola. La chiave include la data di modifica
+        del file: una voce sostituita viene ricaricata.
+        """
+        percorso = self.cartella / f"{nome}.onnx"
+        if not percorso.is_file():
+            raise ValueError(f"voce Piper non installata: {nome}")
+        chiave = (nome, percorso.stat().st_mtime_ns)
         with self._blocco:
-            if nome not in self._modelli:
+            if chiave not in self._modelli:
                 from piper import PiperVoice
 
-                percorso = self.cartella / f"{nome}.onnx"
-                if not percorso.exists():
-                    raise ValueError(f"voce Piper non installata: {nome}")
-                self._modelli[nome] = PiperVoice.load(percorso)
-            return self._modelli[nome]
+                self._modelli = {k: m for k, m in self._modelli.items() if k[0] != nome}
+                self._modelli[chiave] = PiperVoice.load(percorso)
+            return self._modelli[chiave]
 
     def _sintetizza(self, testo: str, voce: Voce) -> bytes:
         from piper import SynthesisConfig
@@ -103,59 +87,9 @@ class PiperTTS:
         return await asyncio.to_thread(self._sintetizza, testo, voce)
 
     async def voci(self, lingua: str) -> list[InfoVoce]:
-        """Le voci installate per la lingua, lette ogni volta dalla cartella."""
-        voci = []
-        for configurazione in sorted(self.cartella.glob("*.onnx.json")):
-            nome = configurazione.name.removesuffix(".onnx.json")
-            if not (self.cartella / f"{nome}.onnx").exists():
-                continue
-            try:
-                dati = json.loads(configurazione.read_text(encoding="utf-8"))
-                codice = dati["language"]["code"]
-            except (OSError, ValueError, KeyError, TypeError):
-                continue
-            if codice.split("_")[0] != lingua:
-                continue
-            speaker = nome.split("-")[1] if nome.count("-") >= 2 else nome
-            voci.append(InfoVoce(nome, GENERI.get(speaker, "Unknown"), codice.replace("_", "-")))
-        return voci
-
-
-def scarica_voci(nomi: list[str], cartella: Path) -> None:
-    """
-    Scarica le voci in `cartella`, saltando quelle già presenti. Ogni file
-    viene scritto prima in una cartella temporanea, così un'interruzione non
-    lascia modelli a metà.
-    """
-    from piper.download_voices import download_voice
-
-    cartella.mkdir(parents=True, exist_ok=True)
-    for nome in nomi:
-        file = [f"{nome}.onnx", f"{nome}.onnx.json"]
-        if all((cartella / f).exists() for f in file):
-            print(f"{nome}: già presente")
-            continue
-        print(f"{nome}: download in corso…", flush=True)
-        with tempfile.TemporaryDirectory(dir=cartella) as temporanea:
-            download_voice(nome, Path(temporanea))
-            for f in file:
-                shutil.move(Path(temporanea) / f, cartella / f)
-        print(f"{nome}: fatto")
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Scarica le voci Piper per l'uso offline.")
-    parser.add_argument(
-        "voci",
-        nargs="*",
-        default=list(VOCI_CONSIGLIATE),
-        help="nomi delle voci (es. it_IT-paola-medium); di default quelle italiane",
-    )
-    parser.add_argument("--cartella", type=Path, default=cartella_predefinita())
-    argomenti = parser.parse_args()
-    scarica_voci(argomenti.voci, argomenti.cartella)
-    print(f"Voci in {argomenti.cartella}")
-
-
-if __name__ == "__main__":
-    main()
+        """Le voci complete per la lingua, lette ogni volta dalla cartella."""
+        return [
+            InfoVoce(v.nome, v.genere, v.lingua)
+            for v in voci_installate(self.cartella)
+            if v.completa and v.lingua.split("-")[0] == lingua
+        ]

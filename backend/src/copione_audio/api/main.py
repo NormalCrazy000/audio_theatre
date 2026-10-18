@@ -27,6 +27,7 @@ from copione_audio.render import render
 from copione_audio.tts import InfoVoce, TTSEngine, Voce, assegna_voci
 from copione_audio.tts.cache import CacheTTS
 from copione_audio.tts.edge import EdgeTTS
+from copione_audio.tts import voci_piper
 from copione_audio.tts.piper import PiperTTS
 
 # main.py → api → copione_audio → src → backend → radice del progetto
@@ -44,6 +45,14 @@ def motori_tts() -> dict[str, TTSEngine]:
 
 
 Motori = Annotated[dict[str, TTSEngine], Depends(motori_tts)]
+
+
+def cartella_voci_piper() -> Path:
+    """La cartella delle voci Piper (sostituibile nei test con `dependency_overrides`)."""
+    return voci_piper.cartella_predefinita()
+
+
+CartellaVoci = Annotated[Path, Depends(cartella_voci_piper)]
 
 
 # --- Modelli di richiesta e risposta ---
@@ -93,6 +102,54 @@ class RichiestaAudio(BaseModel):
     motore: NomeMotore = "edge"
     voci: dict[str, Voce] = {}
     """Voci scelte; i personaggi mancanti ricevono una voce automatica."""
+
+
+class VoceInstallataOut(BaseModel):
+    nome: str
+    lingua: str
+    genere: str
+    modello: bool
+    """Se c'è il file `.onnx`."""
+    configurazione: bool
+    """Se c'è il file `.onnx.json` ed è valido."""
+    completa: bool
+    mb: float
+
+
+class VoceCatalogoOut(BaseModel):
+    nome: str
+    genere: str
+    qualita: str
+    mb: int
+    dati: str
+    link_modello: str
+    link_configurazione: str
+    pagina: str
+    installata: bool
+
+
+class VociOffline(BaseModel):
+    """Stato della cartella delle voci Piper, con i link per scaricarne altre."""
+
+    cartella: str
+    installate: list[VoceInstallataOut]
+    catalogo: list[VoceCatalogoOut]
+    """Le voci della lingua richiesta, da scaricare a mano."""
+    repository: str
+    """Dove trovare le voci di tutte le lingue."""
+
+
+class ErroreFile(BaseModel):
+    file: str
+    messaggio: str
+
+
+class RisultatoAggiunta(BaseModel):
+    aggiunti: list[str]
+    """I file salvati."""
+    errori: list[ErroreFile]
+    """I file rifiutati, con il motivo."""
+    voci: VociOffline
 
 
 class StatoLavoro(BaseModel):
@@ -153,7 +210,40 @@ def _analisi(copione: Copione, errori: list[Errore]) -> Analisi:
     )
 
 
-COMANDO_VOCI_PIPER = "uv run --project backend python -m copione_audio.tts.piper"
+def _voci_offline(cartella: Path, lingua: str) -> VociOffline:
+    installate = voci_piper.voci_installate(cartella)
+    complete = {v.nome for v in installate if v.completa}
+    return VociOffline(
+        cartella=str(cartella.resolve()),
+        installate=[
+            VoceInstallataOut(
+                nome=v.nome,
+                lingua=v.lingua,
+                genere=v.genere,
+                modello=v.modello,
+                configurazione=v.configurazione,
+                completa=v.completa,
+                mb=v.mb,
+            )
+            for v in installate
+        ],
+        catalogo=[
+            VoceCatalogoOut(
+                nome=v.nome,
+                genere=v.genere,
+                qualita=v.qualita,
+                mb=v.mb,
+                dati=v.dati,
+                link_modello=v.link_modello,
+                link_configurazione=v.link_configurazione,
+                pagina=v.pagina,
+                installata=v.nome in complete,
+            )
+            for v in voci_piper.CATALOGO
+            if v.nome.split("_")[0] == lingua
+        ],
+        repository=voci_piper.REPOSITORY,
+    )
 
 
 async def _disponibili(motori: dict[str, TTSEngine], motore: str, lingua: str) -> list[InfoVoce]:
@@ -170,7 +260,7 @@ async def _disponibili(motori: dict[str, TTSEngine], motore: str, lingua: str) -
     if not voci:
         messaggio = f"nessuna voce per la lingua \"{lingua}\""
         if motore == "piper":
-            messaggio += f"; per scaricare le voci offline: {COMANDO_VOCI_PIPER}"
+            messaggio += "; aggiungile da «Gestisci voci offline» nelle Impostazioni"
         raise HTTPException(422, {"messaggio": messaggio})
     return voci
 
@@ -249,6 +339,40 @@ def crea_app(
         """
         disponibili = await _disponibili(motori, richiesta.motore, richiesta.lingua)
         return assegna_voci(richiesta.personaggi + [NARRATORE], disponibili)
+
+    @app.get("/api/voci/piper")
+    def voci_offline(cartella: CartellaVoci, lingua: str = "it") -> VociOffline:
+        """Le voci Piper installate e quelle della lingua da scaricare a mano."""
+        return _voci_offline(cartella, lingua)
+
+    @app.post("/api/voci/piper")
+    def aggiungi_voci_offline(
+        file: list[UploadFile], cartella: CartellaVoci, lingua: str = "it"
+    ) -> RisultatoAggiunta:
+        """
+        Salva nella cartella i file delle voci (`.onnx` e `.onnx.json`),
+        scaricati a mano. I file non validi vengono rifiutati uno per uno.
+        """
+        aggiunti, errori = [], []
+        for f in file:
+            nome = f.filename or "?"
+            try:
+                voci_piper.aggiungi_file(cartella, nome, f.file)
+                aggiunti.append(nome)
+            except ValueError as e:
+                errori.append(ErroreFile(file=nome, messaggio=str(e)))
+        return RisultatoAggiunta(
+            aggiunti=aggiunti, errori=errori, voci=_voci_offline(cartella, lingua)
+        )
+
+    @app.delete("/api/voci/piper/{nome}")
+    def elimina_voce_offline(nome: str, cartella: CartellaVoci, lingua: str = "it") -> VociOffline:
+        """Cancella i file di una voce Piper."""
+        try:
+            voci_piper.elimina_voce(cartella, nome)
+        except ValueError as e:
+            raise HTTPException(404, {"messaggio": str(e)})
+        return _voci_offline(cartella, lingua)
 
     @app.post(
         "/api/voci/anteprima",

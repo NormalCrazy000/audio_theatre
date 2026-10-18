@@ -5,10 +5,8 @@
 #       -v copione-audio-voci:/data/voci copione-audio
 #
 # Poi apri http://localhost:8000. Il TTS online (edge-tts) richiede internet;
-# per quello offline (Piper) si scaricano una volta le voci nel volume:
-#
-#   docker run --rm -v copione-audio-voci:/data/voci copione-audio \
-#       python -m copione_audio.tts.piper
+# per quello offline (Piper) le voci si scaricano a mano e si aggiungono da
+# «Gestisci voci offline» nell'interfaccia: finiscono nel volume /data/voci.
 
 # --- 1. Build del frontend -------------------------------------------------
 FROM node:24-slim AS frontend

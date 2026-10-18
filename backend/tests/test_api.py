@@ -5,7 +5,9 @@ import pytest
 from fastapi.testclient import TestClient
 from pypdf import PdfWriter
 
-from copione_audio.api.main import crea_app, motori_tts
+import json
+
+from copione_audio.api.main import cartella_voci_piper, crea_app, motori_tts
 from copione_audio.tts.piper import PiperTTS
 
 COPIONE = """\
@@ -176,7 +178,7 @@ def test_motore_scelto_nella_richiesta(tmp_path, finto_tts):
         assert client.get("/api/voci", params={"motore": "altro"}).status_code == 422
 
 
-def test_piper_senza_voci_spiega_come_scaricarle(tmp_path, finto_tts):
+def test_piper_senza_voci_spiega_dove_aggiungerle(tmp_path, finto_tts):
     app = crea_app(cartella_lavori=tmp_path, frontend=tmp_path / "assente")
     app.dependency_overrides[motori_tts] = lambda: {
         "edge": finto_tts,
@@ -185,9 +187,48 @@ def test_piper_senza_voci_spiega_come_scaricarle(tmp_path, finto_tts):
     with TestClient(app) as client:
         risposta = client.get("/api/voci", params={"lingua": "it", "motore": "piper"})
         assert risposta.status_code == 422
-        assert "copione_audio.tts.piper" in risposta.json()["detail"]["messaggio"]
+        assert "Gestisci voci offline" in risposta.json()["detail"]["messaggio"]
         risposta = client.post(
             "/api/audio",
             json={"testo": COPIONE, "opzioni": {"personaggio": "A"}, "motore": "piper"},
         )
         assert risposta.status_code == 422
+
+
+def test_gestione_voci_offline(tmp_path, finto_tts):
+    voci = tmp_path / "voci"
+    app = crea_app(cartella_lavori=tmp_path, frontend=tmp_path / "assente")
+    app.dependency_overrides[motori_tts] = lambda: {"edge": finto_tts, "piper": PiperTTS(voci)}
+    app.dependency_overrides[cartella_voci_piper] = lambda: voci
+    configurazione = json.dumps({"language": {"code": "it_IT"}, "phoneme_id_map": {}})
+    with TestClient(app) as client:
+        stato = client.get("/api/voci/piper").json()
+        assert stato["installate"] == []
+        paola = next(v for v in stato["catalogo"] if v["nome"] == "it_IT-paola-medium")
+        assert paola["link_modello"].endswith(
+            "/resolve/main/it/it_IT/paola/medium/it_IT-paola-medium.onnx?download=true"
+        )
+        assert not paola["installata"]
+
+        # Prima il solo modello (voce incompleta), poi la configurazione e un file sbagliato.
+        risposta = client.post(
+            "/api/voci/piper",
+            files=[("file", ("it_IT-paola-medium.onnx", b"\x08\x07resto", "application/octet-stream"))],
+        ).json()
+        assert risposta["voci"]["installate"][0]["completa"] is False
+        risposta = client.post(
+            "/api/voci/piper",
+            files=[
+                ("file", ("it_IT-paola-medium.onnx.json", configurazione.encode(), "application/json")),
+                ("file", ("foto.png", b"x", "image/png")),
+            ],
+        ).json()
+        assert risposta["aggiunti"] == ["it_IT-paola-medium.onnx.json"]
+        assert [e["file"] for e in risposta["errori"]] == ["foto.png"]
+        assert risposta["voci"]["installate"][0]["completa"] is True
+        assert next(v for v in risposta["voci"]["catalogo"] if v["nome"] == "it_IT-paola-medium")["installata"]
+        assert client.get("/api/voci", params={"motore": "piper"}).json()[0]["nome"] == "it_IT-paola-medium"
+
+        assert client.delete("/api/voci/piper/it_IT-paola-medium").json()["installate"] == []
+        assert client.delete("/api/voci/piper/it_IT-paola-medium").status_code == 404
+        assert client.delete("/api/voci/piper/..%2Fsegreto").status_code == 404
