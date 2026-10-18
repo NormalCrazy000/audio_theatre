@@ -46,7 +46,7 @@ COPY --from=frontend /frontend/dist /app/frontend
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     COPIONE_AUDIO_FRONTEND=/app/frontend \
-    XDG_CACHE_HOME=/data/cache \
+    COPIONE_AUDIO_CACHE=/data/cache \
     COPIONE_AUDIO_PIPER=/data/voci
 
 USER app

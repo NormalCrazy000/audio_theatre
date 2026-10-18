@@ -33,15 +33,13 @@ GENERI = {"paola": "Female", "riccardo": "Male", "serena": "Female"}
 HZ_RIFERIMENTO = 200
 
 
+# piper.py → tts → copione_audio → src → backend → radice del progetto
+VOCI_PREDEFINITE = Path(__file__).parents[4] / "voci"
+
+
 def cartella_predefinita() -> Path:
-    """
-    `$COPIONE_AUDIO_PIPER`, oppure `$XDG_DATA_HOME/copione-audio/piper`, o
-    `~/.local/share/copione-audio/piper`.
-    """
-    if cartella := os.environ.get("COPIONE_AUDIO_PIPER"):
-        return Path(cartella)
-    base = os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share"
-    return Path(base) / "copione-audio" / "piper"
+    """`$COPIONE_AUDIO_PIPER`, oppure la cartella `voci/` nella radice del progetto."""
+    return Path(os.environ.get("COPIONE_AUDIO_PIPER", VOCI_PREDEFINITE))
 
 
 def _percentuale(valore: str, unita: str) -> float:

@@ -50,7 +50,7 @@ Nel passo **Configura** si sceglie tra due motori:
 | Internet | Sempre | Solo per scaricare le voci, una volta |
 | Il testo del copione | Viene inviato a Microsoft | Resta sul computer |
 
-Per usare Piper scarica le voci italiane (circa 150 MB) in `~/.local/share/copione-audio/piper`, oppure nella cartella indicata da `$COPIONE_AUDIO_PIPER`:
+Per usare Piper scarica le voci italiane (circa 150 MB) nella cartella `voci/` del progetto (esclusa da git), oppure in quella indicata da `$COPIONE_AUDIO_PIPER`:
 
 ```bash
 uv run --project backend python -m copione_audio.tts.piper
@@ -110,7 +110,7 @@ La documentazione interattiva è su <http://127.0.0.1:8000/docs>.
 | `GET /api/audio/{id}` | Stato e progresso |
 | `GET /api/audio/{id}/mp3` | Scarica l'mp3 |
 
-Le battute sintetizzate vengono salvate in `~/.cache/copione-audio/`: rigenerare con opzioni diverse è molto più veloce.
+Le battute sintetizzate vengono salvate nella cartella `cache/` del progetto (esclusa da git; oppure in `$COPIONE_AUDIO_CACHE`): rigenerare con opzioni diverse è molto più veloce. Si può cancellare in qualsiasi momento.
 
 ## Test
 
@@ -135,5 +135,7 @@ I test non usano la rete: il TTS viene sostituito da un finto sintetizzatore.
 - `docs/formato-copione.md`: specifica del formato del copione
 - `.claude/skills/converti-copione/`: skill che converte un PDF nel formato standard
 - `pdf_folder/`: cartella di lavoro per PDF e copioni (ignorata da git)
+- `voci/`: voci Piper scaricate per la sintesi offline (ignorata da git)
+- `cache/`: battute già sintetizzate, si può cancellare (ignorata da git)
 - `REFACTOR.md`: piano della nuova versione
 - `CLAUDE.md`: note per chi sviluppa

@@ -6,10 +6,13 @@ from pathlib import Path
 from copione_audio.tts.base import InfoVoce, TTSEngine, Voce
 
 
+# cache.py → tts → copione_audio → src → backend → radice del progetto
+CACHE_PREDEFINITA = Path(__file__).parents[4] / "cache"
+
+
 def cartella_predefinita() -> Path:
-    """`$XDG_CACHE_HOME/copione-audio/tts`, o `~/.cache/copione-audio/tts`."""
-    base = os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache"
-    return Path(base) / "copione-audio" / "tts"
+    """`$COPIONE_AUDIO_CACHE`, oppure la cartella `cache/` nella radice del progetto."""
+    return Path(os.environ.get("COPIONE_AUDIO_CACHE", CACHE_PREDEFINITA))
 
 
 class CacheTTS:

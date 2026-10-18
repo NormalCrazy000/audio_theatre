@@ -10,4 +10,6 @@
 **/.pytest_cache
 .claude
 pdf_folder
+voci
+cache
 *.mp3
