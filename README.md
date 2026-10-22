@@ -70,6 +70,7 @@ Se Docker risponde `permission denied`, usa `sudo docker compose …` oppure agg
 | Il browser non apre la pagina («impossibile raggiungere il sito») | L'app non è in esecuzione: avviala (passo 3) e aspetta il messaggio `Uvicorn running` |
 | «Voci non disponibili» con la sintesi online | Manca la connessione a internet: riprova, oppure passa alla sintesi offline |
 | «Voci non disponibili» con la sintesi offline | Non ci sono voci installate: aggiungile da «Gestisci voci offline» |
+| «richiesta rifiutata: l'app accetta solo richieste da questo computer» | Hai aperto l'app con un indirizzo diverso da `localhost` o `127.0.0.1`: usa uno di questi, oppure vedi [Sicurezza](#sicurezza) |
 | Errore che cita `ffmpeg` o `ffprobe` durante la generazione | FFmpeg non è installato o non è nel PATH (passo 1) |
 
 ## Come si usa
@@ -131,6 +132,16 @@ Se il copione non deve uscire dal computer, usa la sintesi offline e converti il
 ## Copioni e diritto d'autore
 
 I copioni teatrali sono in genere protetti dal diritto d'autore. L'app li elabora solo sul tuo computer, per lo studio personale: sei tu responsabile di avere il diritto di usare i testi che carichi e di non diffondere copioni o audio generati senza il permesso di chi ne detiene i diritti. Questo repository non contiene copioni.
+
+## Sicurezza
+
+L'app non ha login: chi la raggiunge può usarla e anche aggiungere o cancellare le voci offline. Per questo:
+
+- è pensata per girare solo sul tuo computer (con Docker la porta è pubblicata solo su `127.0.0.1`), e **non va esposta su internet**;
+- accetta solo richieste indirizzate a `localhost`, `127.0.0.1` o `::1` e provenienti dalle sue pagine, così un sito aperto nel browser non può usarla di nascosto;
+- ha dei limiti: testi fino a 2 milioni di caratteri, PDF fino a 50 MB, file delle voci fino a 200 MB, al massimo due generazioni alla volta.
+
+Per usarla da un altro dispositivo della rete di casa, avviala con `--host 0.0.0.0` e metti in `COPIONE_AUDIO_HOST` il nome o l'indirizzo con cui la raggiungi, separati da virgole (es. `COPIONE_AUDIO_HOST=192.168.1.5`). Chiunque sia sulla stessa rete potrà usarla.
 
 ## Sviluppo
 

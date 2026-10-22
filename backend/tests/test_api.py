@@ -7,7 +7,8 @@ from pypdf import PdfWriter
 
 import json
 
-from copione_audio.api.main import cartella_voci_piper, crea_app, motori_tts
+from copione_audio.api import main
+from copione_audio.api.main import Lavoro, cartella_voci_piper, crea_app, motori_tts
 from copione_audio.tts.piper import PiperTTS
 
 COPIONE = """\
@@ -28,7 +29,7 @@ B: Solo io.
 def client(tmp_path, finto_tts):
     app = crea_app(cartella_lavori=tmp_path, frontend=tmp_path / "assente")
     app.dependency_overrides[motori_tts] = lambda: {"edge": finto_tts, "piper": finto_tts}
-    with TestClient(app) as client:
+    with TestClient(app, base_url="http://localhost") as client:
         yield client
 
 
@@ -142,7 +143,7 @@ def test_lavoro_inesistente(client):
 def test_frontend_servito_se_presente(tmp_path, finto_tts):
     (tmp_path / "index.html").write_text("<h1>ciao</h1>")
     app = crea_app(cartella_lavori=tmp_path, frontend=tmp_path)
-    with TestClient(app) as client:
+    with TestClient(app, base_url="http://localhost") as client:
         assert client.get("/").text == "<h1>ciao</h1>"
         assert client.post("/api/copioni/analizza", json={"testo": COPIONE}).status_code == 200
 
@@ -169,7 +170,7 @@ def test_motore_scelto_nella_richiesta(tmp_path, finto_tts):
     offline = FintoTTS()
     app = crea_app(cartella_lavori=tmp_path, frontend=tmp_path / "assente")
     app.dependency_overrides[motori_tts] = lambda: {"edge": finto_tts, "piper": offline}
-    with TestClient(app) as client:
+    with TestClient(app, base_url="http://localhost") as client:
         risposta = client.post(
             "/api/voci/anteprima", json={"voce": {"nome": "x"}, "motore": "piper"}
         )
@@ -184,7 +185,7 @@ def test_piper_senza_voci_spiega_dove_aggiungerle(tmp_path, finto_tts):
         "edge": finto_tts,
         "piper": PiperTTS(tmp_path / "voci"),
     }
-    with TestClient(app) as client:
+    with TestClient(app, base_url="http://localhost") as client:
         risposta = client.get("/api/voci", params={"lingua": "it", "motore": "piper"})
         assert risposta.status_code == 422
         assert "Gestisci voci offline" in risposta.json()["detail"]["messaggio"]
@@ -201,7 +202,7 @@ def test_gestione_voci_offline(tmp_path, finto_tts):
     app.dependency_overrides[motori_tts] = lambda: {"edge": finto_tts, "piper": PiperTTS(voci)}
     app.dependency_overrides[cartella_voci_piper] = lambda: voci
     configurazione = json.dumps({"language": {"code": "it_IT"}, "phoneme_id_map": {}})
-    with TestClient(app) as client:
+    with TestClient(app, base_url="http://localhost") as client:
         stato = client.get("/api/voci/piper").json()
         assert stato["installate"] == []
         paola = next(v for v in stato["catalogo"] if v["nome"] == "it_IT-paola-medium")
@@ -232,3 +233,81 @@ def test_gestione_voci_offline(tmp_path, finto_tts):
         assert client.delete("/api/voci/piper/it_IT-paola-medium").json()["installate"] == []
         assert client.delete("/api/voci/piper/it_IT-paola-medium").status_code == 404
         assert client.delete("/api/voci/piper/..%2Fsegreto").status_code == 404
+
+
+@pytest.mark.parametrize(
+    ("indirizzo", "origine", "codice"),
+    [
+        ("http://localhost:8000", None, 200),
+        ("http://127.0.0.1:8000", "http://127.0.0.1:8000", 200),
+        ("http://[::1]:8000", None, 200),
+        ("http://localhost:5173", "http://localhost:5173", 200),  # Vite in sviluppo
+        ("http://attacco.example", None, 403),  # DNS rebinding
+        ("http://localhost:8000", "https://attacco.example", 403),  # richiesta da un altro sito
+        ("http://localhost:8000", "null", 403),
+    ],
+)
+def test_solo_richieste_da_questo_computer(client, indirizzo, origine, codice):
+    intestazioni = {"origin": origine} if origine else {}
+    risposta = client.post(
+        f"{indirizzo}/api/copioni/analizza", json={"testo": COPIONE}, headers=intestazioni
+    )
+    assert risposta.status_code == codice
+    if codice == 403:
+        assert "questo computer" in risposta.json()["detail"]["messaggio"]
+
+
+def test_host_aggiunti_con_variabile_d_ambiente(monkeypatch):
+    monkeypatch.setenv("COPIONE_AUDIO_HOST", " Portatile.local , 192.168.1.5,")
+    assert main.host_consentiti() == main.HOST_LOCALI | {"portatile.local", "192.168.1.5"}
+
+
+def test_testo_troppo_lungo(client, monkeypatch):
+    monkeypatch.setattr(main, "MAX_CARATTERI", len(COPIONE) - 1)
+    for percorso, corpo in [
+        ("/api/copioni/analizza", {"testo": COPIONE}),
+        ("/api/audio", {"testo": COPIONE, "opzioni": {"personaggio": "A"}}),
+    ]:
+        risposta = client.post(percorso, json=corpo)
+        assert risposta.status_code == 413
+        assert risposta.json()["detail"]["messaggio"].startswith("testo troppo lungo")
+
+
+def test_pdf_troppo_grande(client, monkeypatch):
+    monkeypatch.setattr(main, "MAX_MB_PDF", 0)
+    risposta = client.post("/api/copioni/pdf", files={"file": ("c.pdf", b"%PDF-1.7 ...")})
+    assert risposta.status_code == 413
+
+
+def test_voce_troppo_grande(client, monkeypatch, tmp_path):
+    voci = tmp_path / "voci"
+    client.app.dependency_overrides[cartella_voci_piper] = lambda: voci
+    monkeypatch.setattr(main, "MAX_MB_VOCE", 0)
+    risposta = client.post(
+        "/api/voci/piper",
+        files=[("file", ("it_IT-paola-medium.onnx", b"\x08\x07resto", "application/octet-stream"))],
+    ).json()
+    assert risposta["aggiunti"] == []
+    assert risposta["errori"][0]["messaggio"].startswith("file troppo grande")
+    assert not any(voci.glob("*.onnx"))
+
+
+def test_troppe_generazioni_in_corso(client):
+    lavori = client.app.state.lavori
+    for i in range(main.MAX_LAVORI_IN_CORSO):
+        lavori[f"lento{i}"] = Lavoro(id=f"lento{i}", nome_file="x.mp3")
+    risposta = client.post("/api/audio", json={"testo": COPIONE, "opzioni": {"personaggio": "A"}})
+    assert risposta.status_code == 429
+
+
+def test_lavori_vecchi_scartati(client, monkeypatch):
+    monkeypatch.setattr(main, "MAX_LAVORI", 2)
+    corpo = {"testo": COPIONE, "opzioni": {"personaggio": "A"}}
+    primo = aspetta(client, client.post("/api/audio", json=corpo).json()["id"])
+    file_primo = client.app.state.lavori[primo["id"]].file
+    assert file_primo.exists()
+    for _ in range(2):
+        aspetta(client, client.post("/api/audio", json=corpo).json()["id"])
+    assert client.get(f"/api/audio/{primo['id']}").status_code == 404
+    assert not file_primo.exists()
+    assert len(client.app.state.lavori) == 2

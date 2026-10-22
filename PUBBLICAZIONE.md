@@ -76,9 +76,10 @@ Nel codice:
 
 Già a posto: nessun segreto nella storia, frontend senza chiamate esterne, porta pubblicata solo su `127.0.0.1`, container con utente non root.
 
-- [ ] README: l'app non ha login e non va esposta su internet.
-- [ ] Limite alla dimensione degli upload (PDF e copione) e ai job in corso, per evitare che un file enorme blocchi l'app.
-- [ ] GitHub: Dependabot alerts, secret scanning con push protection, protezione di `main` (niente force push dopo la Fase 1).
+- [x] README: l'app non ha login e non va esposta su internet (sezione "Sicurezza").
+- [x] Limite alla dimensione degli upload (PDF e copione) e ai job in corso, per evitare che un file enorme blocchi l'app. Tolti anche i lavori vecchi (al massimo 20 in memoria).
+- [x] Richieste accettate solo con `Host` e `Origin` locali (o in `$COPIONE_AUDIO_HOST`): senza login, un sito aperto nel browser poteva usare l'app (DNS rebinding, upload da un'altra origine).
+- [ ] GitHub: Dependabot alerts, secret scanning con push protection, protezione di `main` (niente force push dopo la Fase 1). Spostato nella Fase 6: secret scanning e protezione dei branch sono gratuiti solo sui repository pubblici.
 - [ ] Decidere se tenere pubblici `CLAUDE.md`, `REFACTOR.md` e `TODO.md` (non contengono nulla di sensibile) e se disattivare le Issues.
 
 ### Fase 6 – Controllo finale e pubblicazione
@@ -86,6 +87,7 @@ Già a posto: nessun segreto nella storia, frontend senza chiamate esterne, port
 - [ ] `gitleaks detect` (o `trufflehog git file://.`) sul repository riscritto.
 - [ ] Clone fresco: test (`uv run pytest`), build del frontend e `docker compose up --build`.
 - [ ] Settings → Change visibility → Public.
+- [ ] Subito dopo: Dependabot alerts, secret scanning con push protection e una regola (ruleset) su `main` che vieta force push e cancellazione.
 
 ## Domande aperte
 

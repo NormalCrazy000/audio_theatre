@@ -10,13 +10,15 @@ import os
 import re
 import tempfile
 import uuid
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
 from typing import Annotated, Literal
+from urllib.parse import urlsplit
 
 from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -32,6 +34,23 @@ from copione_audio.tts.piper import PiperTTS
 
 # main.py → api → copione_audio → src → backend → radice del progetto
 FRONTEND_PREDEFINITO = Path(__file__).parents[4] / "frontend" / "dist"
+
+# Limiti contro richieste sbagliate o abnormi. Un copione intero sta sui 200 000
+# caratteri; le voci Piper più grandi pesano circa 115 MB.
+MAX_CARATTERI = 2_000_000
+MAX_MB_PDF = 50
+MAX_MB_VOCE = 200
+MAX_LAVORI_IN_CORSO = 2
+MAX_LAVORI = 20
+"""Lavori tenuti in memoria (con il loro mp3); oltre, si scartano i più vecchi già finiti."""
+
+HOST_LOCALI = frozenset({"localhost", "127.0.0.1", "::1"})
+
+
+def host_consentiti() -> frozenset[str]:
+    """I nomi con cui si raggiunge l'app: quelli locali più `$COPIONE_AUDIO_HOST` (separati da virgole)."""
+    altri = os.environ.get("COPIONE_AUDIO_HOST", "").split(",")
+    return HOST_LOCALI | {h.strip().lower() for h in altri if h.strip()}
 
 
 NomeMotore = Literal["edge", "piper"]
@@ -265,6 +284,26 @@ async def _disponibili(motori: dict[str, TTSEngine], motore: str, lingua: str) -
     return voci
 
 
+def _controlla_lunghezza(testo: str) -> None:
+    if len(testo) > MAX_CARATTERI:
+        raise HTTPException(
+            413, {"messaggio": f"testo troppo lungo: al massimo {MAX_CARATTERI} caratteri"}
+        )
+
+
+def _troppo_grande(file: UploadFile, max_mb: int) -> bool:
+    return file.size is not None and file.size > max_mb * 1024 * 1024
+
+
+def _scarta_vecchi(lavori: dict[str, Lavoro]) -> None:
+    """Tiene al massimo `MAX_LAVORI` lavori, eliminando i più vecchi già finiti e i loro mp3."""
+    finiti = [l for l in lavori.values() if l.stato != "in_corso"]
+    for lavoro in finiti[: max(0, len(lavori) - MAX_LAVORI)]:
+        del lavori[lavoro.id]
+        if lavoro.file is not None:
+            lavoro.file.unlink(missing_ok=True)
+
+
 def _nome_file(titolo: str, personaggio: str) -> str:
     """Nome dell'mp3 da scaricare, es. "Così non vale.LAURA.mp3"."""
     base = " ".join(re.sub(r'[\\/:*?"<>|]', " ", titolo).split()) or "copione"
@@ -295,7 +334,9 @@ async def _esegui(
 
 
 def crea_app(
-    cartella_lavori: Path | None = None, frontend: Path | None = None
+    cartella_lavori: Path | None = None,
+    frontend: Path | None = None,
+    host: Iterable[str] | None = None,
 ) -> FastAPI:
     """
     Crea l'applicazione.
@@ -304,21 +345,44 @@ def crea_app(
         cartella temporanea.
     :param frontend: La build del frontend da servire su `/`; di default
         `$COPIONE_AUDIO_FRONTEND` o `frontend/dist`, se esiste.
+    :param host: I nomi con cui si può raggiungere l'app; di default
+        `host_consentiti()`.
     """
     app = FastAPI(title="Copione Audio")
     app.state.cartella = cartella_lavori or Path(tempfile.mkdtemp(prefix="copione-audio-"))
     app.state.lavori: dict[str, Lavoro] = {}
     # Riferimenti ai task in corso, perché non vengano raccolti dal GC.
     app.state.task: set[asyncio.Task] = set()
+    consentiti = frozenset(host) if host is not None else host_consentiti()
+
+    @app.middleware("http")
+    async def solo_da_questo_computer(request: Request, call_next):
+        """
+        Rifiuta le richieste con un Host o un'origine non consentiti. L'app non
+        ha login: così un sito aperto nel browser non può usarla, né con il DNS
+        rebinding né mandando richieste da un'altra origine.
+        """
+        origine = request.headers.get("origin")
+        if request.url.hostname not in consentiti or (
+            origine is not None and urlsplit(origine).hostname not in consentiti
+        ):
+            return JSONResponse(
+                {"detail": {"messaggio": "richiesta rifiutata: l'app accetta solo richieste da questo computer"}},
+                status_code=403,
+            )
+        return await call_next(request)
 
     @app.post("/api/copioni/analizza")
     def analizza_copione(richiesta: Testo) -> Analisi:
         """Legge e valida un copione nel formato standard."""
+        _controlla_lunghezza(richiesta.testo)
         return _analisi(*analizza(richiesta.testo))
 
     @app.post("/api/copioni/pdf")
     def testo_da_pdf(file: UploadFile) -> Testo:
         """Estrae il testo grezzo da un PDF."""
+        if _troppo_grande(file, MAX_MB_PDF):
+            raise HTTPException(413, {"messaggio": f"PDF troppo grande: al massimo {MAX_MB_PDF} MB"})
         try:
             return Testo(testo=estrai_testo(file.file))
         except Exception as e:
@@ -357,6 +421,8 @@ def crea_app(
         for f in file:
             nome = f.filename or "?"
             try:
+                if _troppo_grande(f, MAX_MB_VOCE):
+                    raise ValueError(f"file troppo grande: al massimo {MAX_MB_VOCE} MB")
                 voci_piper.aggiungi_file(cartella, nome, f.file)
                 aggiunti.append(nome)
             except ValueError as e:
@@ -400,6 +466,12 @@ def crea_app(
         Avvia la generazione dell'mp3. I problemi del copione e delle opzioni
         vengono segnalati subito (422); la sintesi prosegue in background.
         """
+        lavori = request.app.state.lavori
+        if sum(l.stato == "in_corso" for l in lavori.values()) >= MAX_LAVORI_IN_CORSO:
+            raise HTTPException(
+                429, {"messaggio": "ci sono già generazioni in corso: aspetta che finiscano"}
+            )
+        _controlla_lunghezza(richiesta.testo)
         motore = motori[richiesta.motore]
         copione, errori = analizza(richiesta.testo)
         if errori:
@@ -425,7 +497,8 @@ def crea_app(
             id=uuid.uuid4().hex,
             nome_file=_nome_file(copione.titolo, richiesta.opzioni.personaggio),
         )
-        request.app.state.lavori[lavoro.id] = lavoro
+        lavori[lavoro.id] = lavoro
+        _scarta_vecchi(lavori)
         task = asyncio.create_task(
             _esegui(
                 lavoro,
