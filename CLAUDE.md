@@ -10,6 +10,8 @@ Strumento per **studiare un copione**: genera un audio in cui il TTS legge le ba
 
 Il progetto è **in refactor**. Il piano, le decisioni prese e l'ordine delle fasi sono in [`REFACTOR.md`](REFACTOR.md). Va letto prima di qualsiasi modifica strutturale e aggiornato quando una decisione cambia o una fase è completata.
 
+Prima dei TODO c'è la pubblicazione del repository: fasi e checklist in [`PUBBLICAZIONE.md`](PUBBLICAZIONE.md).
+
 Fasi 0–5 completate. Codice attuale in `backend/src/copione_audio/`:
 
 - `api/main.py`: FastAPI, `crea_app()`. Endpoint sotto `/api`; l'audio è un job asincrono (`POST /api/audio` → stato → `/mp3`). I motori TTS arrivano dalla dipendenza `motori_tts` (`{"edge": …, "piper": …}`), che nei test si sostituisce con `dependency_overrides`; ogni richiesta sceglie il motore con il campo `motore`. Se esiste `frontend/dist` (o `$COPIONE_AUDIO_FRONTEND`) viene servito su `/`.
