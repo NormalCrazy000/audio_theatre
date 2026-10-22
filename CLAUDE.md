@@ -10,7 +10,7 @@ Strumento per **studiare un copione**: genera un audio in cui il TTS legge le ba
 
 Il progetto è **in refactor**. Il piano, le decisioni prese e l'ordine delle fasi sono in [`REFACTOR.md`](REFACTOR.md). Va letto prima di qualsiasi modifica strutturale e aggiornato quando una decisione cambia o una fase è completata.
 
-Prima dei TODO c'è la pubblicazione del repository: fasi e checklist in [`PUBBLICAZIONE.md`](PUBBLICAZIONE.md).
+Il repository è pubblico (GPL-3.0-or-later): il percorso e le decisioni sono in [`PUBBLICAZIONE.md`](PUBBLICAZIONE.md). Non vanno mai committati copioni, PDF o audio generati, perché quasi sempre sono protetti da diritto d'autore.
 
 Fasi 0–5 completate. Codice attuale in `backend/src/copione_audio/`:
 

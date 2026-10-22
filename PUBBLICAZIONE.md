@@ -20,7 +20,7 @@ Le fasi 1 e 2 sono bloccanti: vanno fatte prima del cambio di visibilità, perch
 3. **Fase 3 – Licenza** ✅
 4. **Fase 4 – Trasparenza su servizi esterni e diritto d'autore** ✅
 5. **Fase 5 – Sicurezza e impostazioni del repository** ✅
-6. **Fase 6 – Controllo finale e pubblicazione**
+6. **Fase 6 – Controllo finale e pubblicazione** ✅
 
 ---
 
@@ -82,13 +82,16 @@ Già a posto: nessun segreto nella storia, frontend senza chiamate esterne, port
 - [ ] GitHub: Dependabot alerts, secret scanning con push protection, protezione di `main` (niente force push dopo la Fase 1). Spostato nella Fase 6: secret scanning e protezione dei branch sono gratuiti solo sui repository pubblici.
 - [x] Decidere se tenere pubblici `CLAUDE.md`, `REFACTOR.md` e `TODO.md` (non contengono nulla di sensibile) e se disattivare le Issues: si tengono tutti, anche `PUBBLICAZIONE.md`, e le Issues restano attive.
 
-### Fase 6 – Controllo finale e pubblicazione
+### Fase 6 – Controllo finale e pubblicazione ✅
+
+> Completata il 2026-10-22: il repository è pubblico e GitHub riconosce la licenza GPL-3.0. I commit della storia vecchia non sono raggiungibili (404).
 
 - [x] ~~`gitleaks detect` sul repository riscritto~~: saltato. Il controllo manuale della Fase 1 non aveva trovato segreti, e dopo la pubblicazione ci pensa il secret scanning di GitHub.
 - [x] Clone fresco: test (`uv run pytest`) e build del frontend.
-- [ ] `docker compose up --build`, da provare a mano.
-- [ ] Settings → Change visibility → Public.
-- [ ] Subito dopo: Dependabot alerts, secret scanning con push protection e una regola (ruleset) su `main` che vieta force push e cancellazione.
+- [x] `docker compose up --build`, provato a mano.
+- [x] Settings → Change visibility → Public.
+- [x] Subito dopo: Dependabot alerts, secret scanning con push protection.
+- [ ] Una regola (ruleset) su `main` che vieta force push e cancellazione: dall'API pubblica non risulta attiva (controllare che l'enforcement sia "Active" e che il target includa `main`).
 
 ## Domande aperte
 
