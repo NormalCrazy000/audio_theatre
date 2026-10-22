@@ -19,7 +19,7 @@ Le fasi 1 e 2 sono bloccanti: vanno fatte prima del cambio di visibilità, perch
 2. **Fase 2 – Email personale nei commit** (bloccante) ✅
 3. **Fase 3 – Licenza** ✅
 4. **Fase 4 – Trasparenza su servizi esterni e diritto d'autore** ✅
-5. **Fase 5 – Sicurezza e impostazioni del repository**
+5. **Fase 5 – Sicurezza e impostazioni del repository** ✅
 6. **Fase 6 – Controllo finale e pubblicazione**
 
 ---
@@ -72,7 +72,7 @@ Nel codice:
 - [ ] (Rimandato) Se serve un copione di esempio, usarne uno di pubblico dominio (es. Goldoni) o scritto apposta.
 - [x] Facoltativo: sostituire i nomi del copione reale (ora ROMEO e GIULIETTA) negli esempi di `conversione/istruzioni.md` e `docs/modello-locale.md`.
 
-### Fase 5 – Sicurezza e impostazioni del repository
+### Fase 5 – Sicurezza e impostazioni del repository ✅
 
 Già a posto: nessun segreto nella storia, frontend senza chiamate esterne, porta pubblicata solo su `127.0.0.1`, container con utente non root.
 
@@ -80,7 +80,7 @@ Già a posto: nessun segreto nella storia, frontend senza chiamate esterne, port
 - [x] Limite alla dimensione degli upload (PDF e copione) e ai job in corso, per evitare che un file enorme blocchi l'app. Tolti anche i lavori vecchi (al massimo 20 in memoria).
 - [x] Richieste accettate solo con `Host` e `Origin` locali (o in `$COPIONE_AUDIO_HOST`): senza login, un sito aperto nel browser poteva usare l'app (DNS rebinding, upload da un'altra origine).
 - [ ] GitHub: Dependabot alerts, secret scanning con push protection, protezione di `main` (niente force push dopo la Fase 1). Spostato nella Fase 6: secret scanning e protezione dei branch sono gratuiti solo sui repository pubblici.
-- [ ] Decidere se tenere pubblici `CLAUDE.md`, `REFACTOR.md` e `TODO.md` (non contengono nulla di sensibile) e se disattivare le Issues.
+- [x] Decidere se tenere pubblici `CLAUDE.md`, `REFACTOR.md` e `TODO.md` (non contengono nulla di sensibile) e se disattivare le Issues: si tengono tutti, anche `PUBBLICAZIONE.md`, e le Issues restano attive.
 
 ### Fase 6 – Controllo finale e pubblicazione
 
