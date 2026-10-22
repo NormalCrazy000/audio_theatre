@@ -173,3 +173,13 @@ I test non usano la rete: il TTS viene sostituito da un finto sintetizzatore.
 - `Dockerfile`, `compose.yaml`: immagine Docker e avvio con Docker Compose
 - `REFACTOR.md`: piano della nuova versione
 - `CLAUDE.md`: note per chi sviluppa
+- `PUBBLICAZIONE.md`: piano per rendere pubblico il repository
+- `LICENSE`: testo della licenza (GPL-3.0)
+
+## Licenza
+
+Copyright © 2025–2026 NormalCrazy000.
+
+Questo programma è software libero, distribuito con la [GNU General Public License](LICENSE), versione 3 o (a tua scelta) successiva (`GPL-3.0-or-later`). Puoi usarlo, studiarlo, modificarlo e ridistribuirlo; se distribuisci una versione modificata, deve avere la stessa licenza e va reso disponibile il codice sorgente. È fornito **senza alcuna garanzia**: i dettagli sono nel file [`LICENSE`](LICENSE).
+
+La licenza è GPL perché il progetto usa [Piper](https://github.com/OHF-Voice/piper1-gpl), che è GPL-3.0. Le altre dipendenze hanno licenze compatibili (MIT, BSD, Apache-2.0, LGPL-3.0).

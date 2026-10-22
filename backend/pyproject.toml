@@ -2,6 +2,7 @@
 name = "copione-audio"
 version = "0.1.0"
 description = "Genera audio di allenamento per studiare un copione"
+license = "GPL-3.0-or-later"
 requires-python = ">=3.14"
 dependencies = [
     "audioop-lts>=0.2.2",

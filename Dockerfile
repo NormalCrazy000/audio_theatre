@@ -32,6 +32,9 @@ RUN uv sync --frozen --no-dev --no-editable
 
 # --- 3. Immagine finale ----------------------------------------------------
 FROM python:3.14-slim
+LABEL org.opencontainers.image.title="Copione Audio" \
+      org.opencontainers.image.source="https://github.com/NormalCrazy000/audio_theatre" \
+      org.opencontainers.image.licenses="GPL-3.0-or-later"
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ffmpeg \
     && rm -rf /var/lib/apt/lists/* \
@@ -41,6 +44,7 @@ RUN apt-get update \
 
 COPY --from=backend /app/.venv /app/.venv
 COPY --from=frontend /frontend/dist /app/frontend
+COPY LICENSE /app/LICENSE
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \

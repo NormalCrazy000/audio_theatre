@@ -17,7 +17,7 @@ Le fasi 1 e 2 sono bloccanti: vanno fatte prima del cambio di visibilità, perch
 
 1. **Fase 1 – Pulizia della storia git** (bloccante) ✅
 2. **Fase 2 – Email personale nei commit** (bloccante) ✅
-3. **Fase 3 – Licenza**
+3. **Fase 3 – Licenza** ✅
 4. **Fase 4 – Trasparenza su servizi esterni e diritto d'autore**
 5. **Fase 5 – Sicurezza e impostazioni del repository**
 6. **Fase 6 – Controllo finale e pubblicazione**
@@ -45,13 +45,15 @@ Quasi tutti i commit hanno come autore l'email personale, che con il repository 
 - [x] `git config user.email` con l'indirizzo noreply.
 - [ ] Su GitHub (Settings → Emails): "Keep my email addresses private" e "Block command line pushes that expose my email".
 
-### Fase 3 – Licenza
+### Fase 3 – Licenza ✅
 
-- [ ] File `LICENSE` con il testo della GPL-3.0.
-- [ ] `backend/pyproject.toml`: `license = "GPL-3.0-or-later"` e il file della licenza in `license-files`.
-- [ ] `frontend/package.json`: `"license": "GPL-3.0-or-later"`.
-- [ ] `Dockerfile`: `LABEL org.opencontainers.image.licenses="GPL-3.0-or-later"`.
-- [ ] README: sezione "Licenza".
+> Completata. `license-files` non è stato aggiunto: il file della licenza sta nella radice, fuori da `backend/`, e non è previsto pubblicare il pacchetto su PyPI. Nell'immagine Docker la licenza è in `/app/LICENSE`.
+
+- [x] File `LICENSE` con il testo della GPL-3.0.
+- [x] `backend/pyproject.toml`: `license = "GPL-3.0-or-later"`.
+- [x] `frontend/package.json`: `"license": "GPL-3.0-or-later"`.
+- [x] `Dockerfile`: `LABEL org.opencontainers.image.licenses="GPL-3.0-or-later"`.
+- [x] README: sezione "Licenza".
 
 ### Fase 4 – Trasparenza su servizi esterni e diritto d'autore
 
