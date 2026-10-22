@@ -8,11 +8,11 @@ Strumento per **studiare un copione**: genera un audio in cui il TTS legge le ba
 
 ## Stato attuale
 
-Il progetto è **in refactor**. Il piano, le decisioni prese e l'ordine delle fasi sono in [`REFACTOR.md`](REFACTOR.md). Va letto prima di qualsiasi modifica strutturale e aggiornato quando una decisione cambia o una fase è completata.
+Le decisioni di progetto (con il motivo) e il comportamento del piano audio sono in [`docs/decisioni.md`](docs/decisioni.md): va letto prima di qualsiasi modifica strutturale e aggiornato quando una decisione cambia. Le cose da fare sono in [`TODO.md`](TODO.md).
 
-Il repository è pubblico (GPL-3.0-or-later): il percorso e le decisioni sono in [`PUBBLICAZIONE.md`](PUBBLICAZIONE.md). Non vanno mai committati copioni, PDF o audio generati, perché quasi sempre sono protetti da diritto d'autore.
+Il repository è pubblico (GPL-3.0-or-later). Non vanno mai committati copioni, PDF o audio generati, perché quasi sempre sono protetti da diritto d'autore.
 
-Fasi 0–5 completate. Codice attuale in `backend/src/copione_audio/`:
+Codice attuale in `backend/src/copione_audio/`:
 
 - `api/main.py`: FastAPI, `crea_app()`. Endpoint sotto `/api`; l'audio è un job asincrono (`POST /api/audio` → stato → `/mp3`). I motori TTS arrivano dalla dipendenza `motori_tts` (`{"edge": …, "piper": …}`), che nei test si sostituisce con `dependency_overrides`; ogni richiesta sceglie il motore con il campo `motore`. Se esiste `frontend/dist` (o `$COPIONE_AUDIO_FRONTEND`) viene servito su `/`. Un middleware rifiuta le richieste con `Host` o `Origin` diversi da `localhost`/`127.0.0.1`/`::1` (più `$COPIONE_AUDIO_HOST`); nei test si usa `TestClient(app, base_url="http://localhost")`. I limiti (`MAX_*`) sono costanti in cima al modulo.
 - `piano.py`: `crea_piano(copione, Opzioni) -> [Parla | Silenzio | Pausa]`, una funzione pura. Toglie le didascalie tra parentesi dal testo letto, salvo `leggi_didascalie`. `Pausa` dipende dalla durata della lettura e viene risolta dal render.
@@ -22,6 +22,8 @@ Fasi 0–5 completate. Codice attuale in `backend/src/copione_audio/`:
 - `conversione/pdf.py`: `estrai_testo(percorso) -> str` con pypdf.
 - `conversione/base.py`: interfaccia `Converter`. Le regole di conversione sono in `conversione/istruzioni.md`, l'unica fonte per la skill `converti-copione` e per il futuro convertitore locale: se cambiano, si aggiornano lì.
 
+Skill `converti-copione` in `.claude/skills/`: converte un PDF o un testo grezzo nel formato standard, con le regole di `conversione/istruzioni.md`.
+
 Frontend in `frontend/` (Svelte 5 con rune, Vite, TypeScript):
 
 - `src/App.svelte` tiene lo stato e collega la scheda `src/lib/Impostazioni.svelte` (opzioni che non dipendono dal copione, motore TTS, `VociOffline.svelte`) e i quattro passi `src/lib/Carica|Controlla|Configura|Genera.svelte`;
@@ -30,17 +32,6 @@ Frontend in `frontend/` (Svelte 5 con rune, Vite, TypeScript):
 - in sviluppo Vite inoltra `/api` a `127.0.0.1:8000`; in produzione FastAPI serve `frontend/dist`.
 
 `Dockerfile` (radice, multi-stage): build del frontend con Node, dipendenze con `uv sync --frozen --no-dev --no-editable`, immagine finale `python:3.14-slim` con ffmpeg e utente non root. Il frontend arriva tramite `COPIONE_AUDIO_FRONTEND`; la cache TTS sta in `COPIONE_AUDIO_CACHE=/data/cache` e le voci Piper in `COPIONE_AUDIO_PIPER=/data/voci`, entrambi volumi. `compose.yaml` li collega alle cartelle `cache/` e `voci/` del progetto (tenute in git con un `.gitkeep`, perché se Docker le creasse sarebbero di root) e pubblica la porta solo su `127.0.0.1`.
-
-## Architettura obiettivo (in breve)
-
-- `backend/`: FastAPI con un pacchetto `copione_audio`, diviso in:
-  - parser del formato `NOME: battuta`;
-  - `piano.py`, una funzione **pura** `(copione, opzioni) -> segmenti`;
-  - `render.py`, che dai segmenti produce l'mp3;
-  - TTS dietro l'interfaccia `TTSEngine` (edge-tts online, Piper offline);
-  - conversione dietro l'interfaccia `Converter`.
-- `frontend/`: Svelte + Vite (SPA). In produzione è servito da FastAPI.
-- `.claude/skills/converti-copione/`: skill che converte PDF o testo grezzo nel formato standard. In futuro sarà affiancata da un modello locale (Ollama) dietro la stessa interfaccia `Converter`.
 
 ## Comandi
 

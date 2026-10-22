@@ -2,7 +2,7 @@
 
 Applicazione Python per **studiare un copione**: trasforma il testo in un file audio in cui le battute vengono lette dalla sintesi vocale (TTS) e, dove tocca a te, c'è una pausa di silenzio in cui recitare la tua battuta a memoria.
 
-Si usa da un'interfaccia web: carichi il copione, scegli il personaggio, le battute da ascoltare, le pause e le voci, e scarichi l'mp3. Il piano del progetto è in [`REFACTOR.md`](REFACTOR.md).
+Si usa da un'interfaccia web: carichi il copione, scegli il personaggio, le battute da ascoltare, le pause e le voci, e scarichi l'mp3.
 
 ## Avvio rapido
 
@@ -202,9 +202,9 @@ I test non usano la rete: il TTS viene sostituito da un finto sintetizzatore.
 - `voci/`: voci Piper scaricate per la sintesi offline (ignorata da git)
 - `cache/`: battute già sintetizzate, si può cancellare (ignorata da git)
 - `Dockerfile`, `compose.yaml`: immagine Docker e avvio con Docker Compose
-- `REFACTOR.md`: piano della nuova versione
+- `docs/decisioni.md`: decisioni di progetto e comportamento del piano audio
+- `TODO.md`: cose da fare
 - `CLAUDE.md`: note per chi sviluppa
-- `PUBBLICAZIONE.md`: piano per rendere pubblico il repository
 - `LICENSE`: testo della licenza (GPL-3.0)
 
 ## Licenza

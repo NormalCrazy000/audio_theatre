@@ -53,7 +53,7 @@ type Segmento = Parla | Silenzio | Pausa
 @dataclass(frozen=True)
 class Opzioni:
     """
-    Opzioni del piano (vedi REFACTOR.md, Fase 3).
+    Opzioni del piano (il comportamento è descritto in docs/decisioni.md).
 
     :param personaggio: Il personaggio da studiare.
     :param personaggi_inclusi: Gli altri personaggi da far sentire; None = tutti.

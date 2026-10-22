@@ -1,6 +1,6 @@
 # Modello locale (Ollama) – piano
 
-Fase 6 di [`REFACTOR.md`](../REFACTOR.md): convertire un PDF nel formato del copione direttamente dall'app, con un modello che gira sul computer. **Stato: in sospeso**, prima va sistemata la GPU (vedi sotto). Niente codice scritto finora.
+Voce di [`TODO.md`](../TODO.md): convertire un PDF nel formato del copione direttamente dall'app, con un modello che gira sul computer. **Stato: in sospeso**, prima va sistemata la GPU (vedi sotto). Niente codice scritto finora.
 
 ## Come l'app parla con il modello
 
