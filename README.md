@@ -1,4 +1,4 @@
-# Text To Audio – allenamento sul copione
+# Audio Theatre – allenamento sul copione
 
 Applicazione Python per **studiare un copione**: trasforma il testo in un file audio in cui le battute vengono lette dalla sintesi vocale (TTS) e, dove tocca a te, c'è una pausa di silenzio in cui recitare la tua battuta a memoria.
 

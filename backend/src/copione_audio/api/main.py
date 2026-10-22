@@ -348,8 +348,8 @@ def crea_app(
     :param host: I nomi con cui si può raggiungere l'app; di default
         `host_consentiti()`.
     """
-    app = FastAPI(title="Copione Audio")
-    app.state.cartella = cartella_lavori or Path(tempfile.mkdtemp(prefix="copione-audio-"))
+    app = FastAPI(title="Audio Theatre")
+    app.state.cartella = cartella_lavori or Path(tempfile.mkdtemp(prefix="audio-theatre-"))
     app.state.lavori: dict[str, Lavoro] = {}
     # Riferimenti ai task in corso, perché non vengano raccolti dal GC.
     app.state.task: set[asyncio.Task] = set()

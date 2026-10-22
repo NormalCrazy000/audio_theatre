@@ -1,4 +1,4 @@
-# Copione Audio: frontend Svelte + backend FastAPI in un'unica immagine.
+# Audio Theatre: frontend Svelte + backend FastAPI in un'unica immagine.
 #
 # Si avvia con Docker Compose (vedi compose.yaml):
 #
@@ -32,7 +32,7 @@ RUN uv sync --frozen --no-dev --no-editable
 
 # --- 3. Immagine finale ----------------------------------------------------
 FROM python:3.14-slim
-LABEL org.opencontainers.image.title="Copione Audio" \
+LABEL org.opencontainers.image.title="Audio Theatre" \
       org.opencontainers.image.source="https://github.com/NormalCrazy000/audio_theatre" \
       org.opencontainers.image.licenses="GPL-3.0-or-later"
 RUN apt-get update \

@@ -181,7 +181,7 @@
 </script>
 
 <header>
-  <h1>Copione Audio</h1>
+  <h1>Audio Theatre</h1>
   <p class="tenue">Carica un copione, scegli la tua parte e ascolta le battute degli altri.</p>
 </header>
 

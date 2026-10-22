@@ -1,13 +1,13 @@
-# Copione Audio con Docker Compose.
+# Audio Theatre con Docker Compose.
 #
 #   docker compose up --build     # avvia (e ricostruisce l'immagine se il codice è cambiato)
 #   docker compose down           # ferma e rimuove il container
 #
 # Poi apri http://localhost:8000.
 services:
-  copione-audio:
+  audio-theatre:
     build: .
-    image: copione-audio
+    image: audio-theatre
     ports:
       # Solo su questo computer: l'app non ha login, non va esposta alla rete.
       - "127.0.0.1:8000:8000"
