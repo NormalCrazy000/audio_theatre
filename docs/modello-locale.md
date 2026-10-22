@@ -1,6 +1,6 @@
 # Modello locale (Ollama) – piano
 
-Voce di [`TODO.md`](../TODO.md): convertire un PDF nel formato del copione direttamente dall'app, con un modello che gira sul computer. **Stato: in sospeso**, prima va sistemata la GPU (vedi sotto). Niente codice scritto finora.
+Voce di [`TODO.md`](../TODO.md): convertire un PDF nel formato del copione direttamente dall'app, con un modello che gira sul computer. **Stato: da fare**, niente codice scritto finora. Serve una GPU: sulla CPU un copione intero richiederebbe decine di minuti.
 
 ## Come l'app parla con il modello
 
@@ -30,7 +30,7 @@ Browser ──PDF──▶ FastAPI ──estrae il testo (pypdf)──▶ Ollama
 
 ## Come si avvia il modello
 
-"Avviare il modello" vuol dire: server Ollama acceso (sulla macchina di sviluppo parte già come servizio di sistema) + modello caricato in memoria.
+"Avviare il modello" vuol dire: server Ollama acceso (su Linux di solito parte già come servizio di sistema) + modello caricato in memoria.
 
 Scelta all'avvio dell'app, con una variabile o uno script:
 
@@ -45,7 +45,7 @@ Con il modello attivo, nel lifespan di FastAPI e in background (l'app parte subi
 2. controlla che il modello sia scaricato; se manca lo segnala nell'interfaccia (niente download automatico di 5 GB);
 3. lo precarica e lo tiene in memoria (`keep_alive`) finché l'app è aperta; alla chiusura lo scarica (`keep_alive: 0`).
 
-In Docker l'app non avvia Ollama: si collega a quello del computer su `host.docker.internal:11434`.
+In Docker l'app non avvia Ollama: si collega a quello del computer su `host.docker.internal:11434` (su Linux serve `extra_hosts: ["host.docker.internal:host-gateway"]` in `compose.yaml`).
 
 Su Linux Ollama non ha un'interfaccia grafica ufficiale (l'app desktop esiste solo per macOS e Windows). Non serve: lo stato del modello (in caricamento, pronto, mancante) lo mostra la nostra pagina.
 
@@ -63,27 +63,11 @@ Nel passo **Carica**, con un PDF:
 2. Avvio e arresto nel lifespan: controllo del server, `ollama serve` se serve, precaricamento, stato.
 3. API: `GET /api/conversione/stato`, `POST /api/conversioni` con stato e risultato.
 4. Frontend: pulsante, avanzamento, risultato nell'editor.
-5. Collaudo sul PDF di *Così non vale*, confrontando i conteggi con quelli della skill (19 scene, 1109 battute).
+5. Collaudo su un copione già convertito con la skill, confrontando i conteggi di scene e battute.
 6. `avvia.sh`, Docker, documentazione.
 
 ## Domande ancora aperte
 
-- **Modello predefinito**: `qwen3` 8B (già scaricato, buono con italiano e JSON) oppure `qwen3:14b` (circa 9 GB, sta nei 16 GB della GPU, più affidabile). Resta comunque configurabile.
+- **Modello predefinito**: `qwen3` 8B (circa 5 GB, buono con italiano e JSON) oppure `qwen3:14b` (circa 9 GB, più affidabile, serve una GPU da 12–16 GB). Resta comunque configurabile.
 - **Scelta all'avvio o interruttore nell'interfaccia** per caricare e scaricare il modello senza riavviare. Richiesta iniziale: scelta all'avvio.
 - Conferma della strategia «il modello classifica, il codice ricompone».
-
-## Prerequisito: GPU sulla macchina di sviluppo
-
-Diagnosi del 2026-10-18 (Ubuntu 24.04.5, RTX 4080 SUPER, 32 GB di RAM, Ollama 0.13.5 con `qwen3` 8B, `llama3.1:8b`, `gemma3`):
-
-- Ollama gira **sulla CPU** (`inference compute … library=cpu` nei log): un copione come *Così non vale* richiederebbe 30–60 minuti (stima), contro pochi minuti sulla GPU;
-- il driver `nvidia-driver-595-open` (quello consigliato) è installato, ma **i moduli del kernel esistono solo per il 7.0.0-31**. In uso c'è il 7.0.0-34 ed è installato anche il 7.0.0-38 (parte al prossimo riavvio);
-- il meta-pacchetto `linux-modules-nvidia-595-open-generic-hwe-24.04` è rimasto alla versione 31 (probabilmente "kept back"), quindi `modprobe nvidia` → «Module nvidia not found». Secure Boot è disattivato.
-
-Soluzione (comandi da lanciare a mano):
-
-1. `sudo apt install linux-modules-nvidia-595-open-generic-hwe-24.04`, controllando che apt non proponga di rimuovere pacchetti;
-2. riavviare (parte il kernel 38, con i moduli);
-3. verificare: `nvidia-smi` mostra la scheda; dopo `sudo systemctl restart ollama` i log mostrano `library=cuda`; misurare la velocità di `qwen3`.
-
-Rete di sicurezza: dal menu di GRUB si può sempre avviare il kernel 7.0.0-31, che ha i moduli.

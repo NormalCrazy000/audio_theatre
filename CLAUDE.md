@@ -19,7 +19,7 @@ Codice attuale in `backend/src/copione_audio/`:
 - `render.py`: `async render(segmenti, voci, motore)`. Sintetizza ogni (personaggio, testo) una volta sola, in parallelo, poi monta l'audio.
 - `tts/`: interfaccia `TTSEngine` e `Voce`, motori `EdgeTTS` (online) e `PiperTTS` (offline, voci in `voci/` nella radice del progetto o in `$COPIONE_AUDIO_PIPER`), `voci_piper.py` (catalogo con i link, elenco, aggiunta ed eliminazione dei file delle voci: l'app non scarica mai nulla, i file si scaricano a mano e si trascinano nell'interfaccia), `CacheTTS` (cache in `cache/` nella radice del progetto o in `$COPIONE_AUDIO_CACHE`) e `assegna_voci`. Nei test si usa `FintoTTS` (`tests/conftest.py`), che è offline.
 - `copione/`: formato standard del copione (specifica in [`docs/formato-copione.md`](docs/formato-copione.md)). `analizza(testo) -> (Copione, errori)` unisce il parser (sintassi) e il validator (contenuto); gli errori hanno il numero di riga.
-- `conversione/pdf.py`: `estrai_testo(percorso) -> str` con pypdf.
+- `conversione/pdf.py`: `estrai_testo(percorso_o_file) -> str` con pypdf.
 - `conversione/base.py`: interfaccia `Converter`. Le regole di conversione sono in `conversione/istruzioni.md`, l'unica fonte per la skill `converti-copione` e per il futuro convertitore locale: se cambiano, si aggiornano lì.
 
 Skill `converti-copione` in `.claude/skills/`: converte un PDF o un testo grezzo nel formato standard, con le regole di `conversione/istruzioni.md`.
