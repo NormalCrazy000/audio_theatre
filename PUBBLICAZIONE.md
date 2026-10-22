@@ -84,8 +84,9 @@ Già a posto: nessun segreto nella storia, frontend senza chiamate esterne, port
 
 ### Fase 6 – Controllo finale e pubblicazione
 
-- [ ] `gitleaks detect` (o `trufflehog git file://.`) sul repository riscritto.
-- [ ] Clone fresco: test (`uv run pytest`), build del frontend e `docker compose up --build`.
+- [x] ~~`gitleaks detect` sul repository riscritto~~: saltato. Il controllo manuale della Fase 1 non aveva trovato segreti, e dopo la pubblicazione ci pensa il secret scanning di GitHub.
+- [x] Clone fresco: test (`uv run pytest`) e build del frontend.
+- [ ] `docker compose up --build`, da provare a mano.
 - [ ] Settings → Change visibility → Public.
 - [ ] Subito dopo: Dependabot alerts, secret scanning con push protection e una regola (ruleset) su `main` che vieta force push e cancellazione.
 
