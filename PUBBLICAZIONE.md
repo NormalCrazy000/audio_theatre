@@ -18,7 +18,7 @@ Le fasi 1 e 2 sono bloccanti: vanno fatte prima del cambio di visibilità, perch
 1. **Fase 1 – Pulizia della storia git** (bloccante) ✅
 2. **Fase 2 – Email personale nei commit** (bloccante) ✅
 3. **Fase 3 – Licenza** ✅
-4. **Fase 4 – Trasparenza su servizi esterni e diritto d'autore**
+4. **Fase 4 – Trasparenza su servizi esterni e diritto d'autore** ✅
 5. **Fase 5 – Sicurezza e impostazioni del repository**
 6. **Fase 6 – Controllo finale e pubblicazione**
 
@@ -55,20 +55,22 @@ Quasi tutti i commit hanno come autore l'email personale, che con il repository 
 - [x] `Dockerfile`: `LABEL org.opencontainers.image.licenses="GPL-3.0-or-later"`.
 - [x] README: sezione "Licenza".
 
-### Fase 4 – Trasparenza su servizi esterni e diritto d'autore
+### Fase 4 – Trasparenza su servizi esterni e diritto d'autore ✅
+
+> Completata. Nel README ci sono le sezioni "Privacy e servizi esterni" e "Copioni e diritto d'autore". Nessun copione di esempio per ora. Il titolo del copione usato per il collaudo resta citato in `REFACTOR.md` e in una docstring: citare un titolo non è un problema.
 
 Nel README:
 
-- [ ] **Privacy**: con la sintesi online (edge-tts) il testo del copione va ai server Microsoft; con Piper resta tutto sul computer. La skill `converti-copione` manda il copione ad Anthropic.
-- [ ] **edge-tts** usa il servizio di lettura ad alta voce di Edge, non un'API ufficiale: progetto non affiliato a Microsoft, il servizio può cambiare o smettere di funzionare.
-- [ ] **Voci Piper**: ognuna ha la sua licenza (alcune solo per ricerca o uso non commerciale), da controllare nella MODEL_CARD. L'app non le scarica né le distribuisce.
-- [ ] **Copioni**: chi usa l'app deve avere i diritti sui copioni che carica; l'app li elabora solo in locale.
+- [x] **Privacy**: con la sintesi online (edge-tts) il testo del copione va ai server Microsoft; con Piper resta tutto sul computer. La skill `converti-copione` manda il copione ad Anthropic.
+- [x] **edge-tts** usa il servizio di lettura ad alta voce di Edge, non un'API ufficiale: progetto non affiliato a Microsoft, il servizio può cambiare o smettere di funzionare.
+- [x] **Voci Piper**: ognuna ha la sua licenza (alcune solo per ricerca o uso non commerciale), da controllare nella MODEL_CARD. L'app non le scarica né le distribuisce.
+- [x] **Copioni**: chi usa l'app deve avere i diritti sui copioni che carica; l'app li elabora solo in locale.
 
 Nel codice:
 
-- [ ] `.gitignore`: `*.pdf`, `*.mp3`, `*.copione.txt` e `audio/`, con eccezioni per eventuali esempi.
-- [ ] Se serve un copione di esempio, usarne uno di pubblico dominio (es. Goldoni) o scritto apposta.
-- [ ] Facoltativo: sostituire i nomi del copione reale (ALBERTO, GIULIA) negli esempi di `conversione/istruzioni.md` e `docs/modello-locale.md`.
+- [x] `.gitignore`: `*.pdf`, `*.mp3`, `*.copione.txt` e `audio/`, con eccezioni per eventuali esempi.
+- [ ] (Rimandato) Se serve un copione di esempio, usarne uno di pubblico dominio (es. Goldoni) o scritto apposta.
+- [x] Facoltativo: sostituire i nomi del copione reale (ora ROMEO e GIULIETTA) negli esempi di `conversione/istruzioni.md` e `docs/modello-locale.md`.
 
 ### Fase 5 – Sicurezza e impostazioni del repository
 

@@ -112,6 +112,26 @@ L'app non scarica niente da sola. Per usare Piper, nelle **Impostazioni** apri *
 
 Dalla stessa sezione si vedono le voci installate, quelle incomplete (manca uno dei due file) e si eliminano. Piper non ha toni diversi: il tono viene spostato dopo la sintesi.
 
+## Privacy e servizi esterni
+
+L'app gira sul tuo computer: non ha account, non raccoglie statistiche e non manda dati a nessuno, salvo nei casi elencati qui. Le impostazioni restano nel browser (`localStorage`), le battute sintetizzate in `cache/` e le voci offline in `voci/`.
+
+| Quando | Cosa esce dal computer | Verso |
+| :--- | :--- | :--- |
+| Sintesi online (edge-tts) | Il testo delle battute da leggere e l'elenco delle voci richiesto | Microsoft |
+| Sintesi offline (Piper) | Niente | — |
+| Conversione di un PDF con la skill `converti-copione` | Il testo del copione, letto da Claude | Anthropic, secondo le condizioni del tuo account Claude Code |
+
+Se il copione non deve uscire dal computer, usa la sintesi offline e converti il PDF a mano.
+
+**edge-tts.** Il motore online usa la libreria [edge-tts](https://github.com/rany2/edge-tts), che si collega al servizio di lettura ad alta voce di Microsoft Edge. Non è un'API ufficiale: questo progetto non è affiliato a Microsoft né approvato da Microsoft, e il servizio può cambiare o smettere di funzionare in qualsiasi momento.
+
+**Voci Piper.** Ogni voce ha una licenza propria, che dipende dalle registrazioni con cui è stata addestrata; alcune ammettono solo usi di ricerca o non commerciali. La trovi nella scheda della voce (`MODEL_CARD`), raggiungibile dai link in **Gestisci voci offline**. L'app non contiene né distribuisce voci.
+
+## Copioni e diritto d'autore
+
+I copioni teatrali sono in genere protetti dal diritto d'autore. L'app li elabora solo sul tuo computer, per lo studio personale: sei tu responsabile di avere il diritto di usare i testi che carichi e di non diffondere copioni o audio generati senza il permesso di chi ne detiene i diritti. Questo repository non contiene copioni.
+
 ## Sviluppo
 
 ### Interfaccia con ricarica automatica

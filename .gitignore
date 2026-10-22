@@ -2,6 +2,12 @@ __pycache__/*
 *.py[cod]
 *$py.class
 pdf_folder/*
+# Copioni e audio generati: spesso protetti da diritto d'autore, non vanno mai nel repository.
+# Un eventuale esempio (di pubblico dominio) va aggiunto con un'eccezione `!percorso`.
+*.pdf
+*.mp3
+*.copione.txt
+audio/
 # Voci Piper scaricate (modelli da decine di MB) e cache delle battute sintetizzate
 voci/*
 cache/*

@@ -14,7 +14,7 @@ Conservare **tutte le battute, nell'ordine e con le parole originali**. Il file 
 
 ### Nomi
 
-- Usa i nomi come compaiono davanti alle battute, **in maiuscolo e senza articolo**: `ALBERTO:` resta `ALBERTO`, `Il padre` diventa `PADRE`, `L'attor giovane` diventa `ATTOR GIOVANE`.
+- Usa i nomi come compaiono davanti alle battute, **in maiuscolo e senza articolo**: `ROMEO:` resta `ROMEO`, `Il padre` diventa `PADRE`, `L'attor giovane` diventa `ATTOR GIOVANE`.
 - Unifica varianti e refusi dello stesso personaggio (`Il Padre`, `il padre`, `ll figlio`) e segnalali all'utente.
 - Gruppi anonimi (`Gli attori`, `Qualcuno degli attori`, `Un attore`) diventano un solo personaggio collettivo (`ATTORI`). I personaggi numerati con battute proprie (`Il terzo attore`) restano distinti.
 - Un nome non deve mai contenere ` e ` minuscola, che il formato usa per le battute dette insieme: `Gli attori e le attrici` diventa `ATTORI e ATTRICI`, cioè due personaggi.
@@ -29,13 +29,13 @@ Conservare **tutte le battute, nell'ordine e con le parole originali**. Il file 
 
 | Nel testo grezzo | Nel formato standard |
 | :--- | :--- |
-| Titolo di atto o di scena (`ATTO PRIMO`, `SCENA 1 (GIULIA, ALBERTO)`) | Una riga `# …`: `# Atto primo – Scena 1`. Ogni scena ha il suo `#`. Un atto senza scene diventa una scena. L'elenco dei presenti tra parentesi si può togliere. |
+| Titolo di atto o di scena (`ATTO PRIMO`, `SCENA 1 (GIULIETTA, ROMEO)`) | Una riga `# …`: `# Atto primo – Scena 1`. Ogni scena ha il suo `#`. Un atto senza scene diventa una scena. L'elenco dei presenti tra parentesi si può togliere. |
 | Battuta `NOME: testo`, `NOME. testo`, `NOME – testo`, nome su una riga e testo sotto | `NOME: testo` |
 | Battuta che va a capo, anche a cavallo di un cambio pagina | Righe di continuazione **indentate con due spazi** sotto la riga del nome. Un numero di pagina in mezzo va tolto. |
 | Didascalia su righe proprie (in corsivo, tra parentesi, dopo `---` o `—`) | Una sola riga `(testo)`. Se è su più righe, uniscile in una. Non lasciare mai una riga che inizia con `---`. |
-| Didascalia dentro una battuta: `GIULIA: (ride) Ciao` | Lasciala dov'è, tra parentesi. Se il personaggio non riprende a parlare dopo la didascalia, mettila invece su una riga sua dopo la battuta. |
+| Didascalia dentro una battuta: `GIULIETTA: (ride) Ciao` | Lasciala dov'è, tra parentesi. Se il personaggio non riprende a parlare dopo la didascalia, mettila invece su una riga sua dopo la battuta. |
 | Parentesi che fanno parte del **parlato** (un inciso detto a voce, non in corsivo) | Sostituiscile con trattini (` - inciso - `): il testo tra parentesi viene saltato dalla lettura. |
-| Battuta di soli gesti: `ALBERTO: (annuisce)` | Lasciala com'è: per l'attore è comunque un'entrata. |
+| Battuta di soli gesti: `ROMEO: (annuisce)` | Lasciala com'è: per l'attore è comunque un'entrata. |
 | Battuta detta da più personaggi (`ROMEO E GIULIETTA:`, `ROMEO-GIULIETTA:`) | `ROMEO e GIULIETTA:`, con la `e` minuscola o le virgole. Tutti i nomi devono essere nell'intestazione. |
 | `TUTTI:` o un gruppo generico | I nomi dei presenti in scena, se si capiscono dal contesto. Altrimenti aggiungi `TUTTI` all'elenco dei personaggi. |
 | Descrizione iniziale della scenografia | Una didascalia `( … )` subito dopo la prima scena, oppure toglila. |

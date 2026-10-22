@@ -16,7 +16,7 @@ Browser ──PDF──▶ FastAPI ──estrae il testo (pypdf)──▶ Ollama
 - **Il modello classifica le righe, non riscrive il copione.** Riceve il testo a blocchi di circa 100 righe numerate e risponde in JSON (con lo schema imposto tramite il parametro `format` di Ollama):
 
   ```json
-  {"righe": [{"n": 12, "tipo": "battuta", "personaggio": "ALBERTO"},
+  {"righe": [{"n": 12, "tipo": "battuta", "personaggio": "ROMEO"},
              {"n": 13, "tipo": "continua"},
              {"n": 14, "tipo": "didascalia"},
              {"n": 15, "tipo": "scarta"}]}
