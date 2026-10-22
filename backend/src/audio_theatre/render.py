@@ -6,8 +6,8 @@ from io import BytesIO
 
 from pydub import AudioSegment
 
-from copione_audio.piano import Parla, Pausa, Segmento, Silenzio
-from copione_audio.tts import TTSEngine, Voce
+from audio_theatre.piano import Parla, Pausa, Segmento, Silenzio
+from audio_theatre.tts import TTSEngine, Voce
 
 Progresso = Callable[[int, int], None]
 """Riceve (sintesi completate, sintesi totali)."""

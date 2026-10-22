@@ -1,6 +1,6 @@
 import pytest
 
-from copione_audio.copione import Battuta, Didascalia, analizza, leggi_copione
+from audio_theatre.copione import Battuta, Didascalia, analizza, leggi_copione
 
 INTESTAZIONE = """\
 ---

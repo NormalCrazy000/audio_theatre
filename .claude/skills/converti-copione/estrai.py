@@ -8,7 +8,7 @@ Uso (dalla radice del progetto):
 import sys
 from pathlib import Path
 
-from copione_audio.conversione.pdf import estrai_testo
+from audio_theatre.conversione.pdf import estrai_testo
 
 if len(sys.argv) != 2:
     sys.exit(__doc__)

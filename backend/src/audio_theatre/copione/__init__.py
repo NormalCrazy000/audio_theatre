@@ -1,6 +1,6 @@
 """Formato standard del copione: modello, parser e validator."""
 
-from copione_audio.copione.model import (
+from audio_theatre.copione.model import (
     Battuta,
     Copione,
     Didascalia,
@@ -8,8 +8,8 @@ from copione_audio.copione.model import (
     Errore,
     Scena,
 )
-from copione_audio.copione.parser import leggi_copione
-from copione_audio.copione.validator import valida
+from audio_theatre.copione.parser import leggi_copione
+from audio_theatre.copione.validator import valida
 
 __all__ = [
     "Battuta",

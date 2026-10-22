@@ -35,7 +35,7 @@ Browser ──PDF──▶ FastAPI ──estrae il testo (pypdf)──▶ Ollama
 Scelta all'avvio dell'app, con una variabile o uno script:
 
 ```bash
-COPIONE_AUDIO_MODELLO=qwen3 uv run --project backend uvicorn copione_audio.api.main:app
+AUDIO_THEATRE_MODELLO=qwen3 uv run --project backend uvicorn audio_theatre.api.main:app
 ./avvia.sh --modello-locale   # proposta: script che imposta la variabile
 ```
 

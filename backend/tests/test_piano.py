@@ -2,8 +2,8 @@ from dataclasses import replace
 
 import pytest
 
-from copione_audio.copione import analizza
-from copione_audio.piano import (
+from audio_theatre.copione import analizza
+from audio_theatre.piano import (
     NARRATORE,
     Opzioni,
     Parla,

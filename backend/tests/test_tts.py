@@ -1,15 +1,15 @@
 import asyncio
 
-from copione_audio.tts import InfoVoce, Voce, assegna_voci
+from audio_theatre.tts import InfoVoce, Voce, assegna_voci
 import json
 
-from copione_audio.tts.cache import CacheTTS
+from audio_theatre.tts.cache import CacheTTS
 import io
 
 import pytest
 
-from copione_audio.tts.piper import PiperTTS, _percentuale
-from copione_audio.tts.voci_piper import aggiungi_file, elimina_voce, voci_installate
+from audio_theatre.tts.piper import PiperTTS, _percentuale
+from audio_theatre.tts.voci_piper import aggiungi_file, elimina_voce, voci_installate
 
 DISPONIBILI = [
     InfoVoce("M1", "Male", "it-IT"),

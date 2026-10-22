@@ -7,9 +7,9 @@ from pypdf import PdfWriter
 
 import json
 
-from copione_audio.api import main
-from copione_audio.api.main import Lavoro, cartella_voci_piper, crea_app, motori_tts
-from copione_audio.tts.piper import PiperTTS
+from audio_theatre.api import main
+from audio_theatre.api.main import Lavoro, cartella_voci_piper, crea_app, motori_tts
+from audio_theatre.tts.piper import PiperTTS
 
 COPIONE = """\
 ---
@@ -258,7 +258,7 @@ def test_solo_richieste_da_questo_computer(client, indirizzo, origine, codice):
 
 
 def test_host_aggiunti_con_variabile_d_ambiente(monkeypatch):
-    monkeypatch.setenv("COPIONE_AUDIO_HOST", " Portatile.local , 192.168.1.5,")
+    monkeypatch.setenv("AUDIO_THEATRE_HOST", " Portatile.local , 192.168.1.5,")
     assert main.host_consentiti() == main.HOST_LOCALI | {"portatile.local", "192.168.1.5"}
 
 

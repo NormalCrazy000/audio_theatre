@@ -2,7 +2,7 @@
 
 from collections import Counter
 
-from copione_audio.copione.model import Copione, Errore
+from audio_theatre.copione.model import Copione, Errore
 
 
 def valida(copione: Copione) -> list[Errore]:

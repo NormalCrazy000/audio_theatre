@@ -3,7 +3,7 @@ from io import BytesIO
 import pytest
 from pydub import AudioSegment
 
-from copione_audio.tts import InfoVoce, Voce
+from audio_theatre.tts import InfoVoce, Voce
 
 
 class FintoTTS:

@@ -48,9 +48,9 @@ COPY LICENSE /app/LICENSE
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
-    COPIONE_AUDIO_FRONTEND=/app/frontend \
-    COPIONE_AUDIO_CACHE=/data/cache \
-    COPIONE_AUDIO_PIPER=/data/voci
+    AUDIO_THEATRE_FRONTEND=/app/frontend \
+    AUDIO_THEATRE_CACHE=/data/cache \
+    AUDIO_THEATRE_PIPER=/data/voci
 
 USER app
 WORKDIR /home/app
@@ -61,4 +61,4 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/openapi.json')"
 
-CMD ["uvicorn", "copione_audio.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "audio_theatre.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -27,9 +27,9 @@ export const OPZIONI_PREDEFINITE: OpzioniGenerali = {
   leggi_didascalie: false,
 }
 
-const CHIAVE_OPZIONI = 'copione-audio:opzioni'
-const CHIAVE_MOTORE = 'copione-audio:motore'
-const chiaveCopione = (titolo: string) => `copione-audio:copione:${titolo}`
+const CHIAVE_OPZIONI = 'audio-theatre:opzioni'
+const CHIAVE_MOTORE = 'audio-theatre:motore'
+const chiaveCopione = (titolo: string) => `audio-theatre:copione:${titolo}`
 
 function leggi<T>(chiave: string): T | null {
   try {

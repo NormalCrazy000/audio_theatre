@@ -2,7 +2,7 @@
 API HTTP. Tutti gli endpoint stanno sotto `/api`; se esiste la build del
 frontend, viene servita su `/`.
 
-Avvio (dalla radice): `uv run --project backend uvicorn copione_audio.api.main:app`.
+Avvio (dalla radice): `uv run --project backend uvicorn audio_theatre.api.main:app`.
 """
 
 import asyncio
@@ -22,17 +22,17 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from copione_audio.conversione.pdf import estrai_testo
-from copione_audio.copione import Copione, Errore, analizza
-from copione_audio.piano import NARRATORE, Opzioni, Segmento, crea_piano
-from copione_audio.render import render
-from copione_audio.tts import InfoVoce, TTSEngine, Voce, assegna_voci
-from copione_audio.tts.cache import CacheTTS
-from copione_audio.tts.edge import EdgeTTS
-from copione_audio.tts import voci_piper
-from copione_audio.tts.piper import PiperTTS
+from audio_theatre.conversione.pdf import estrai_testo
+from audio_theatre.copione import Copione, Errore, analizza
+from audio_theatre.piano import NARRATORE, Opzioni, Segmento, crea_piano
+from audio_theatre.render import render
+from audio_theatre.tts import InfoVoce, TTSEngine, Voce, assegna_voci
+from audio_theatre.tts.cache import CacheTTS
+from audio_theatre.tts.edge import EdgeTTS
+from audio_theatre.tts import voci_piper
+from audio_theatre.tts.piper import PiperTTS
 
-# main.py → api → copione_audio → src → backend → radice del progetto
+# main.py → api → audio_theatre → src → backend → radice del progetto
 FRONTEND_PREDEFINITO = Path(__file__).parents[4] / "frontend" / "dist"
 
 # Limiti contro richieste sbagliate o abnormi. Un copione intero sta sui 200 000
@@ -48,8 +48,8 @@ HOST_LOCALI = frozenset({"localhost", "127.0.0.1", "::1"})
 
 
 def host_consentiti() -> frozenset[str]:
-    """I nomi con cui si raggiunge l'app: quelli locali più `$COPIONE_AUDIO_HOST` (separati da virgole)."""
-    altri = os.environ.get("COPIONE_AUDIO_HOST", "").split(",")
+    """I nomi con cui si raggiunge l'app: quelli locali più `$AUDIO_THEATRE_HOST` (separati da virgole)."""
+    altri = os.environ.get("AUDIO_THEATRE_HOST", "").split(",")
     return HOST_LOCALI | {h.strip().lower() for h in altri if h.strip()}
 
 
@@ -344,7 +344,7 @@ def crea_app(
     :param cartella_lavori: Dove salvare gli mp3 generati; di default una
         cartella temporanea.
     :param frontend: La build del frontend da servire su `/`; di default
-        `$COPIONE_AUDIO_FRONTEND` o `frontend/dist`, se esiste.
+        `$AUDIO_THEATRE_FRONTEND` o `frontend/dist`, se esiste.
     :param host: I nomi con cui si può raggiungere l'app; di default
         `host_consentiti()`.
     """
@@ -532,7 +532,7 @@ def crea_app(
         return FileResponse(lavoro.file, media_type="audio/mpeg", filename=lavoro.nome_file)
 
     frontend = frontend or Path(
-        os.environ.get("COPIONE_AUDIO_FRONTEND", FRONTEND_PREDEFINITO)
+        os.environ.get("AUDIO_THEATRE_FRONTEND", FRONTEND_PREDEFINITO)
     )
     if frontend.is_dir():
         app.mount("/", StaticFiles(directory=frontend, html=True), name="frontend")

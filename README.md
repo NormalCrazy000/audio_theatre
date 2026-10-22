@@ -30,7 +30,7 @@ cd frontend && npm install && npm run build && cd ..
 ### 3. Avvia l'app
 
 ```bash
-uv run --project backend uvicorn copione_audio.api.main:app
+uv run --project backend uvicorn audio_theatre.api.main:app
 ```
 
 Quando nel terminale compare `Uvicorn running on http://127.0.0.1:8000`, apri **<http://127.0.0.1:8000>** nel browser.
@@ -66,7 +66,7 @@ Se Docker risponde `permission denied`, usa `sudo docker compose …` oppure agg
 | Sintomo | Causa e soluzione |
 | :--- | :--- |
 | Su <http://127.0.0.1:8000> compare `{"detail":"Not Found"}` | L'interfaccia non è stata compilata: esegui `cd frontend && npm run build`, poi riavvia l'app |
-| `address already in use` all'avvio | La porta 8000 è occupata (forse l'app è già avviata in un altro terminale, o con Docker). Chiudi l'altra o usa un'altra porta: `… uvicorn copione_audio.api.main:app --port 8001`; con Docker cambia `127.0.0.1:8000:8000` in `127.0.0.1:8001:8000` in `compose.yaml` |
+| `address already in use` all'avvio | La porta 8000 è occupata (forse l'app è già avviata in un altro terminale, o con Docker). Chiudi l'altra o usa un'altra porta: `… uvicorn audio_theatre.api.main:app --port 8001`; con Docker cambia `127.0.0.1:8000:8000` in `127.0.0.1:8001:8000` in `compose.yaml` |
 | Il browser non apre la pagina («impossibile raggiungere il sito») | L'app non è in esecuzione: avviala (passo 3) e aspetta il messaggio `Uvicorn running` |
 | «Voci non disponibili» con la sintesi online | Manca la connessione a internet: riprova, oppure passa alla sintesi offline |
 | «Voci non disponibili» con la sintesi offline | Non ci sono voci installate: aggiungile da «Gestisci voci offline» |
@@ -109,7 +109,7 @@ Nelle **Impostazioni** si sceglie tra due motori:
 L'app non scarica niente da sola. Per usare Piper, nelle **Impostazioni** apri **Gestisci voci offline**:
 
 1. per ogni voce che vuoi, scarica dai link **tutti e due i file**: il modello `.onnx` e la configurazione `.onnx.json` (dal [repository ufficiale](https://huggingface.co/rhasspy/piper-voices); le italiane pesano 30–115 MB l'una);
-2. trascinali nel riquadro: l'app li controlla e li salva nella cartella `voci/` del progetto (esclusa da git), oppure in quella indicata da `$COPIONE_AUDIO_PIPER`. In alternativa copiali a mano in quella cartella e premi «aggiorna l'elenco».
+2. trascinali nel riquadro: l'app li controlla e li salva nella cartella `voci/` del progetto (esclusa da git), oppure in quella indicata da `$AUDIO_THEATRE_PIPER`. In alternativa copiali a mano in quella cartella e premi «aggiorna l'elenco».
 
 Dalla stessa sezione si vedono le voci installate, quelle incomplete (manca uno dei due file) e si eliminano. Piper non ha toni diversi: il tono viene spostato dopo la sintesi.
 
@@ -141,7 +141,7 @@ L'app non ha login: chi la raggiunge può usarla e anche aggiungere o cancellare
 - accetta solo richieste indirizzate a `localhost`, `127.0.0.1` o `::1` e provenienti dalle sue pagine, così un sito aperto nel browser non può usarla di nascosto;
 - ha dei limiti: testi fino a 2 milioni di caratteri, PDF fino a 50 MB, file delle voci fino a 200 MB, al massimo due generazioni alla volta.
 
-Per usarla da un altro dispositivo della rete di casa, avviala con `--host 0.0.0.0` e metti in `COPIONE_AUDIO_HOST` il nome o l'indirizzo con cui la raggiungi, separati da virgole (es. `COPIONE_AUDIO_HOST=192.168.1.5`). Chiunque sia sulla stessa rete potrà usarla.
+Per usarla da un altro dispositivo della rete di casa, avviala con `--host 0.0.0.0` e metti in `AUDIO_THEATRE_HOST` il nome o l'indirizzo con cui la raggiungi, separati da virgole (es. `AUDIO_THEATRE_HOST=192.168.1.5`). Chiunque sia sulla stessa rete potrà usarla.
 
 ## Sviluppo
 
@@ -150,7 +150,7 @@ Per usarla da un altro dispositivo della rete di casa, avviala con `--host 0.0.0
 In due terminali, dalla cartella del progetto:
 
 ```bash
-uv run --project backend uvicorn copione_audio.api.main:app --reload
+uv run --project backend uvicorn audio_theatre.api.main:app --reload
 cd frontend && npm run dev
 ```
 
@@ -174,7 +174,7 @@ La documentazione interattiva è su <http://127.0.0.1:8000/docs>.
 | `GET /api/audio/{id}` | Stato e progresso |
 | `GET /api/audio/{id}/mp3` | Scarica l'mp3 |
 
-Le battute sintetizzate vengono salvate nella cartella `cache/` del progetto (esclusa da git; oppure in `$COPIONE_AUDIO_CACHE`): rigenerare con opzioni diverse è molto più veloce. Si può cancellare in qualsiasi momento.
+Le battute sintetizzate vengono salvate nella cartella `cache/` del progetto (esclusa da git; oppure in `$AUDIO_THEATRE_CACHE`): rigenerare con opzioni diverse è molto più veloce. Si può cancellare in qualsiasi momento.
 
 ### Test
 
@@ -187,7 +187,7 @@ I test non usano la rete: il TTS viene sostituito da un finto sintetizzatore.
 
 ### Struttura
 
-- `backend/src/copione_audio/`: pacchetto Python
+- `backend/src/audio_theatre/`: pacchetto Python
   - `api/`: API FastAPI
   - `copione/`: modello, parser e validator del formato standard del copione
   - `piano.py`: dal copione e dalle opzioni calcola la sequenza di segmenti (funzione pura)

@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO
 
-# piper.py → tts → copione_audio → src → backend → radice del progetto
+# piper.py → tts → audio_theatre → src → backend → radice del progetto
 VOCI_PREDEFINITE = Path(__file__).parents[4] / "voci"
 
 REPOSITORY = "https://huggingface.co/rhasspy/piper-voices"
@@ -34,8 +34,8 @@ _INIZIO_ONNX = b"\x08"
 
 
 def cartella_predefinita() -> Path:
-    """`$COPIONE_AUDIO_PIPER`, oppure la cartella `voci/` nella radice del progetto."""
-    return Path(os.environ.get("COPIONE_AUDIO_PIPER", VOCI_PREDEFINITE))
+    """`$AUDIO_THEATRE_PIPER`, oppure la cartella `voci/` nella radice del progetto."""
+    return Path(os.environ.get("AUDIO_THEATRE_PIPER", VOCI_PREDEFINITE))
 
 
 @dataclass(frozen=True)

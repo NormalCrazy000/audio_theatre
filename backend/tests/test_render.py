@@ -2,9 +2,9 @@ import asyncio
 
 import pytest
 
-from copione_audio.piano import Parla, Pausa, Silenzio
-from copione_audio.render import render
-from copione_audio.tts import Voce
+from audio_theatre.piano import Parla, Pausa, Silenzio
+from audio_theatre.render import render
+from audio_theatre.tts import Voce
 
 VOCI = {"A": Voce("a"), "B": Voce("b")}
 

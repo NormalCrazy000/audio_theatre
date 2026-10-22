@@ -9,7 +9,7 @@ Uso (dalla radice del progetto):
 import sys
 from pathlib import Path
 
-from copione_audio.copione import analizza
+from audio_theatre.copione import analizza
 
 if len(sys.argv) != 2:
     sys.exit(__doc__)

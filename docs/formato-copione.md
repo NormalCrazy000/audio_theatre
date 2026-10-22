@@ -1,6 +1,6 @@
 # Formato standard del copione
 
-Riferimento unico per chi scrive un copione a mano, per la skill `converti-copione` e per il futuro modello locale. Il parser è in `backend/src/copione_audio/copione/`.
+Riferimento unico per chi scrive un copione a mano, per la skill `converti-copione` e per il futuro modello locale. Il parser è in `backend/src/audio_theatre/copione/`.
 
 Un copione è un file di testo **UTF-8** con estensione `.copione.txt`.
 

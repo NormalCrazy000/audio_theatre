@@ -13,8 +13,8 @@ from pathlib import Path
 
 from pydub import AudioSegment
 
-from copione_audio.tts.base import InfoVoce, Voce
-from copione_audio.tts.voci_piper import cartella_predefinita, voci_installate
+from audio_theatre.tts.base import InfoVoce, Voce
+from audio_theatre.tts.voci_piper import cartella_predefinita, voci_installate
 
 # Piper non varia il tono: lo si sposta dopo la sintesi, trattando gli Hz
 # delle voci (pensati per edge-tts) come scarto da una voce media di 200 Hz.

@@ -1,4 +1,4 @@
-// Tipi e chiamate dell'API (backend/src/copione_audio/api/main.py).
+// Tipi e chiamate dell'API (backend/src/audio_theatre/api/main.py).
 
 export type Errore = { riga: number | null; messaggio: string }
 

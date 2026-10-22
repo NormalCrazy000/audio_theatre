@@ -8,7 +8,7 @@ description: Converte un copione teatrale (PDF o testo grezzo) nel formato stand
 Prima di iniziare leggi:
 
 - `docs/formato-copione.md`: il formato di arrivo;
-- `backend/src/copione_audio/conversione/istruzioni.md`: le regole di conversione. Sono condivise con il futuro convertitore locale (Ollama), quindi se migliori una regola aggiornala lì, non qui.
+- `backend/src/audio_theatre/conversione/istruzioni.md`: le regole di conversione. Sono condivise con il futuro convertitore locale (Ollama), quindi se migliori una regola aggiornala lì, non qui.
 
 Tutti i comandi vanno lanciati dalla radice del progetto.
 

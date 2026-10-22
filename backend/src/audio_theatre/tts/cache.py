@@ -3,16 +3,16 @@ import json
 import os
 from pathlib import Path
 
-from copione_audio.tts.base import InfoVoce, TTSEngine, Voce
+from audio_theatre.tts.base import InfoVoce, TTSEngine, Voce
 
 
-# cache.py → tts → copione_audio → src → backend → radice del progetto
+# cache.py → tts → audio_theatre → src → backend → radice del progetto
 CACHE_PREDEFINITA = Path(__file__).parents[4] / "cache"
 
 
 def cartella_predefinita() -> Path:
-    """`$COPIONE_AUDIO_CACHE`, oppure la cartella `cache/` nella radice del progetto."""
-    return Path(os.environ.get("COPIONE_AUDIO_CACHE", CACHE_PREDEFINITA))
+    """`$AUDIO_THEATRE_CACHE`, oppure la cartella `cache/` nella radice del progetto."""
+    return Path(os.environ.get("AUDIO_THEATRE_CACHE", CACHE_PREDEFINITA))
 
 
 class CacheTTS:

@@ -9,7 +9,7 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
-from copione_audio.copione import Battuta, Copione, Didascalia, Scena
+from audio_theatre.copione import Battuta, Copione, Didascalia, Scena
 
 NARRATORE = "NARRATORE"
 """Il "personaggio" che legge le didascalie quando `leggi_didascalie` è attivo."""

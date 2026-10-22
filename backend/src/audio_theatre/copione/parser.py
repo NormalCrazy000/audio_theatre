@@ -8,7 +8,7 @@ al meglio insieme a tutti gli errori di sintassi trovati.
 import re
 from dataclasses import replace
 
-from copione_audio.copione.model import Battuta, Copione, Didascalia, Errore, Scena
+from audio_theatre.copione.model import Battuta, Copione, Didascalia, Errore, Scena
 
 DELIMITATORE = "---"
 CHIAVI_INTESTAZIONE = ("titolo", "lingua", "personaggi")

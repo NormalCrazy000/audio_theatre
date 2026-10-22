@@ -1,4 +1,4 @@
-from copione_audio.conversione.base import ISTRUZIONI
+from audio_theatre.conversione.base import ISTRUZIONI
 
 
 def test_istruzioni_di_conversione_nel_pacchetto():

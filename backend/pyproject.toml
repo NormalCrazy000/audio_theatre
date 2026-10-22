@@ -1,5 +1,5 @@
 [project]
-name = "copione-audio"
+name = "audio-theatre"
 version = "0.1.0"
 description = "Genera audio di allenamento per studiare un copione"
 license = "GPL-3.0-or-later"

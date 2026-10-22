@@ -2,7 +2,7 @@ import asyncio
 
 import edge_tts
 
-from copione_audio.tts.base import InfoVoce, Voce
+from audio_theatre.tts.base import InfoVoce, Voce
 
 
 class EdgeTTS:
