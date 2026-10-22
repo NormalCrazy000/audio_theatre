@@ -15,8 +15,8 @@ Obiettivo: rendere **pubblico il repository** su GitHub, con una licenza e senza
 
 Le fasi 1 e 2 sono bloccanti: vanno fatte prima del cambio di visibilità, perché dopo non si possono più rimediare del tutto (fork, cache).
 
-1. **Fase 1 – Pulizia della storia git** (bloccante)
-2. **Fase 2 – Email personale nei commit** (bloccante)
+1. **Fase 1 – Pulizia della storia git** (bloccante) ✅
+2. **Fase 2 – Email personale nei commit** (bloccante) ✅
 3. **Fase 3 – Licenza**
 4. **Fase 4 – Trasparenza su servizi esterni e diritto d'autore**
 5. **Fase 5 – Sicurezza e impostazioni del repository**
@@ -24,23 +24,25 @@ Le fasi 1 e 2 sono bloccanti: vanno fatte prima del cambio di visibilità, perch
 
 ---
 
-### Fase 1 – Pulizia della storia git
+### Fase 1 – Pulizia della storia git ✅
+
+> Completata. Oltre a `battute.txt` e `audio/` c'era `frasi.txt`, la prima versione dello stesso copione: tolto anche quello. Il repository è stato ricreato su GitHub come `audio_theatre`, così sul server non resta nessun commit vecchio.
 
 Nei commit vecchi ci sono ancora `battute.txt` (battute di un copione reale, protetto da diritto d'autore) e `audio/combinationAudio.mp3` (la sua lettura, circa 4,8 MB). Non sono più nell'albero, ma chi clona il repository li recupera dalla storia.
 
-- [ ] Backup del repository (clone `--mirror`).
-- [ ] Su un clone fresco: `git filter-repo --invert-paths --path battute.txt --path audio/ --path __pycache__/`.
-- [ ] Verificare con `git log --all --stat` che i file non ci siano più.
-- [ ] `git push --force` di tutte le branch e i tag; riclonare la copia di lavoro.
+- [x] Backup del repository (clone `--mirror`).
+- [x] Su un clone fresco: `git filter-repo --invert-paths --path battute.txt --path frasi.txt --path audio/ --path __pycache__/`.
+- [x] Verificare con `git log --all --stat` che i file non ci siano più.
+- [x] Repository ricreato su GitHub (al posto del `git push --force`) e copia di lavoro riallineata.
 
 In alternativa: un repository nuovo con un solo commit iniziale, rinunciando alla storia.
 
-### Fase 2 – Email personale nei commit
+### Fase 2 – Email personale nei commit ✅
 
 Quasi tutti i commit hanno come autore l'email personale, che con il repository pubblico diventerebbe visibile.
 
-- [ ] Nello stesso passaggio di `git filter-repo`, `--mailmap` per sostituirla con l'indirizzo noreply di GitHub.
-- [ ] `git config user.email` con l'indirizzo noreply.
+- [x] Nello stesso passaggio di `git filter-repo`, `--mailmap` per sostituirla con l'indirizzo noreply di GitHub.
+- [x] `git config user.email` con l'indirizzo noreply.
 - [ ] Su GitHub (Settings → Emails): "Keep my email addresses private" e "Block command line pushes that expose my email".
 
 ### Fase 3 – Licenza
